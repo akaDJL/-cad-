@@ -14,8 +14,6 @@ pip-wheel-metadata/
 out/
 output/
 backups/
-*.dxf
-*.dwg
 *.bak
 
 # ── 工具链缓存 ──────────────────────────────────────────
