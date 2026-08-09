@@ -1,4 +1,4 @@
-# envcad — 机械与环保工程制图集成插件
+# envcad — 跨行业国标工程制图集成插件
 
 > 凹凸CAD小助手（二集）· 国标工程制图插件 · [示例 DXF](examples/) · [使用手册](USAGE.md)
 >
@@ -6,7 +6,7 @@
 > [![python](https://img.shields.io/badge/python-%3E%3D3.10-blue.svg)](https://www.python.org)
 > [![pip](https://img.shields.io/badge/pip-install-9cf.svg)](https://pypi.org/project/envcad/)
 
-集成两个 GitHub 开源项目，面向**机械工程**与**环保工程**日常制图，输出符合
+集成两个 GitHub 开源项目，面向**建筑/土木/结构/机械/环保/电气/给排水/暖通/液压/化工及农业食品、电子半导体、能源化工、测绘GIS、桥梁、土壤修复、环境应急、环评等 16+ 行业**日常制图，输出符合
 国标制图规范（GB/T 50001、GB/T 14689、GB/T 17450、GB 50141/50268）的 DXF 工程图。
 
 ## 集成的两个开源项目
@@ -15,6 +15,13 @@
 | --- | --- | --- |
 | **text-to-cad** (`text-to-cad-main`) | 二维几何生成内核（ezdxf） | `envcad/engine/dxf_base.py` 复用其 `gen_dxf()` 模式，用 ezdxf 生成 DXF |
 | **multiCAD-mcp** (`multiCAD-mcp`) | COM 桥接，把 DXF 推送到 AutoCAD/ZWCAD/GstarCAD/BricsCAD | `envcad/engine/multicad_bridge.py`，与 multiCAD-mcp 同源（Windows COM 自动化） |
+
+## 支持行业（16+）
+
+建筑 · 土木 · 结构 · 机械 · 环保 · 电气 · 给排水 · 暖通 · 液压 · 化工 ·
+农业食品机械 · 电子半导体 · 能源化工 · 测绘 GIS · 桥梁 · 土壤修复 · 环境应急 · 环评
+
+每个行业均内置材料库、规范表、设计验算（强度 / 工艺 / 达标判定）与文档自动化（DOCX 说明书 / XLSX 清单）。
 
 ## 架构
 
