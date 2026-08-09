@@ -1,0 +1,15 @@
+# 领域配置: ic_reactor（IC 内循环厌氧反应器多视图）
+# 由 auto_registry 自动扫描加载，无需修改 cli.py。
+# 各视图函数支持无参调用（默认取 knowledge.ic_reactor_data.IC_DEFAULTS），
+# 也可由设计层传入参数 dict p 驱动。
+
+name: "ic_reactor"
+module: "envcad.standards.ic_reactor"
+description: "IC厌氧反应器多视图（外形/平面/剖面/布水器/三相分离/内循环）"
+functions:
+  ic_elevation: "draw_ic_elevation"
+  ic_plan: "draw_ic_plan"
+  ic_section: "draw_ic_section"
+  ic_distributor: "draw_ic_distributor"
+  ic_three_phase: "draw_ic_three_phase"
+  ic_gas_riser: "draw_ic_gas_riser"

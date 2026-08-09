@@ -1,0 +1,14 @@
+# 领域配置: noise_control（噪声与振动治理多视图）
+# 由 auto_registry 自动扫描加载，无需修改 cli.py。
+# 各视图函数支持无参调用（默认取 knowledge.noise_control_data.NOISE_DEFAULTS），
+# 也可由设计层传入参数 dict p 驱动。
+
+name: "noise_control"
+module: "envcad.standards.noise_control"
+description: "噪声治理多视图（声屏障立面/剖面/消声器/隔声罩/消声百叶）"
+functions:
+  noise_barrier_elevation: "draw_noise_barrier_elevation"
+  noise_barrier_section: "draw_noise_barrier_section"
+  muffler: "draw_muffler"
+  acoustic_enclosure: "draw_acoustic_enclosure"
+  silencer_louver: "draw_silencer_louver"

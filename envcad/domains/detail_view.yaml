@@ -1,0 +1,10 @@
+# 领域配置: detail_view
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "detail_view"
+module: "envcad.standards.detail_view"
+description: "节点详图自动放大+引出标注"
+functions:
+  detail: "create_detail_view"
+  callout: "add_detail_callout"

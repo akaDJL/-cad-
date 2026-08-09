@@ -1,0 +1,157 @@
+[
+  {
+    "domain": "solid_waste",
+    "function": "landfill_section",
+    "params": {
+      "length": 60,
+      "depth": 15,
+      "base_width": 25,
+      "liner_type": "composite",
+      "label": "卫生填埋场剖面图",
+      "params": {
+        "capacity": "80万m³",
+        "area": "6万m²",
+        "leachate": "150m³/d"
+      }
+    },
+    "filename": "01_填埋场剖面图.dxf",
+    "scale": 100
+  },
+  {
+    "domain": "solid_waste",
+    "function": "incinerator_flow",
+    "params": {
+      "f_type": "grate",
+      "label": "垃圾焚烧工艺流程",
+      "params": {
+        "capacity": "500t/d",
+        "temp": "850℃",
+        "residence": ">2s"
+      }
+    },
+    "filename": "02_焚烧工艺流程.dxf",
+    "scale": 100
+  },
+  {
+    "domain": "soil_remediation",
+    "function": "injection_well_grid",
+    "params": {
+      "n_rows": 3,
+      "n_cols": 5,
+      "spacing": 5.0,
+      "oxidant": "persulfate",
+      "label": "原位化学氧化注入井网",
+      "params": {
+        "radius": "2.5m",
+        "concentration": "5%",
+        "flow": "2L/min"
+      }
+    },
+    "filename": "03_注入井网布置.dxf",
+    "scale": 100
+  },
+  {
+    "domain": "soil_remediation",
+    "function": "pump_treat_flow",
+    "params": {
+      "label": "抽出处理系统P&T",
+      "params": {
+        "wells": "6口",
+        "flow": "10m³/h",
+        "contaminant": "TCE"
+      }
+    },
+    "filename": "04_抽出处理系统.dxf",
+    "scale": 100
+  },
+  {
+    "domain": "physical_pollution",
+    "function": "emf_contour",
+    "params": {
+      "source_type": "transmission",
+      "label": "高压输电电磁辐射等值线",
+      "params": {
+        "voltage": "500kV",
+        "freq": "50Hz"
+      }
+    },
+    "filename": "05_电磁辐射等值线.dxf",
+    "scale": 100
+  },
+  {
+    "domain": "physical_pollution",
+    "function": "radiation_zone",
+    "params": {
+      "source_type": "sealed",
+      "label": "放射性防护分区图",
+      "params": {
+        "source": "Co-60",
+        "activity": "3.7E14Bq"
+      }
+    },
+    "filename": "06_放射性防护分区.dxf",
+    "scale": 100
+  },
+  {
+    "domain": "emergency",
+    "function": "risk_dispersion",
+    "params": {
+      "substance_type": "gas",
+      "wind_dir": "E",
+      "wind_speed": 3.0,
+      "label": "事故风险扩散范围图",
+      "params": {
+        "substance": "氯气",
+        "leak_rate": "5kg/s"
+      }
+    },
+    "filename": "07_风险扩散范围.dxf",
+    "scale": 100
+  },
+  {
+    "domain": "emergency",
+    "function": "evacuation_route",
+    "params": {
+      "routes": [
+        {
+          "points": [[10,10],[50,10],[50,80],[100,80]],
+          "label": "主疏散路线A",
+          "dest": "应急集合点1"
+        },
+        {
+          "points": [[10,10],[30,50],[80,50]],
+          "label": "备用路线B",
+          "dest": "应急集合点2"
+        }
+      ],
+      "label": "应急疏散路线图"
+    },
+    "filename": "08_应急疏散路线.dxf",
+    "scale": 100
+  },
+  {
+    "domain": "emergency",
+    "function": "emergency_response_flow",
+    "params": {
+      "label": "环境应急响应流程图"
+    },
+    "filename": "09_应急响应流程.dxf",
+    "scale": 100
+  },
+  {
+    "domain": "water_treatment",
+    "function": "aeration_tank",
+    "params": {
+      "width": 8,
+      "length": 20,
+      "a_type": "diffused",
+      "label": "曝气池平剖面图",
+      "params": {
+        "volume": "2000m³",
+        "MLSS": "4000mg/L"
+      }
+    },
+    "filename": "10_曝气池.dxf",
+    "scale": 100
+  }
+]

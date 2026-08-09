@@ -1,0 +1,13 @@
+# 领域配置: air_pollution
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "air_pollution"
+module: "envcad.standards.apc"
+description: ""
+functions:
+  hood: "draw_hood"
+  cyclone: "draw_cyclone"
+  baghouse_detail: "draw_baghouse_detail"
+  apc_flow: "draw_apc_flow"
+  cems_station: "draw_cems_station"

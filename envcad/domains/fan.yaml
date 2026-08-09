@@ -1,0 +1,14 @@
+# 领域配置: fan（离心风机多视图）
+# 由 auto_registry 自动扫描加载。
+# 成套出图（A/B/C）推荐：envcad equip fan --level B --air_flow 50000 --pressure 2500
+
+name: "fan"
+module: "envcad.standards.fan"
+description: "离心风机多视图（外形/平面/剖面/进出口法兰/减振基础/安装系统）"
+functions:
+  fan_elevation: "draw_fan_elevation"
+  fan_plan: "draw_fan_plan"
+  fan_section: "draw_fan_section"
+  fan_flange: "draw_fan_flange"
+  fan_base: "draw_fan_base"
+  fan_installation: "draw_fan_installation"

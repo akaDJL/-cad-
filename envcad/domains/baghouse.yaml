@@ -1,0 +1,15 @@
+# 领域配置: baghouse（袋式除尘器多视图）
+# 由 auto_registry 自动扫描加载。
+# 注意：各视图函数需 design 参数 p（dict）。单图调用请传 p，
+# 成套出图（A/B/C 分级）推荐用：envcad equip baghouse --level B --air_flow 20000
+
+name: "baghouse"
+module: "envcad.standards.baghouse"
+description: "袋式除尘器多视图（外形/平面/剖面/花板/喷吹/灰斗）"
+functions:
+  baghouse_elevation: "draw_baghouse_elevation"
+  baghouse_plan: "draw_baghouse_plan"
+  baghouse_section: "draw_baghouse_section"
+  baghouse_tube_sheet: "draw_baghouse_tube_sheet"
+  baghouse_pulse: "draw_baghouse_pulse"
+  baghouse_hopper: "draw_baghouse_hopper"

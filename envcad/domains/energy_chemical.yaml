@@ -1,0 +1,21 @@
+# 领域配置: energy_chemical
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "energy_chemical"
+module: "envcad.standards.energy_chemical"
+description: "能源化工（立/卧式储罐/填料·板式塔/列管换热器/反应釜/离心泵/压缩机/管道支吊架/变电站·光伏·风机基础）"
+functions:
+  vertical_tank: "draw_vertical_tank"
+  horizontal_tank: "draw_horizontal_tank"
+  packed_column: "draw_packed_column"
+  tray_column: "draw_tray_column"
+  shell_tube_exchanger: "draw_shell_tube_exchanger"
+  reactor_vessel: "draw_reactor_vessel"
+  centrifugal_pump: "draw_centrifugal_pump"
+  compressor: "draw_compressor"
+  pipe_support: "draw_pipe_support"
+  substation_pv_foundation: "draw_substation_pv_foundation"
+  substation_plan: "draw_substation_plan"
+  pv_array_foundation: "draw_pv_array_foundation"
+  wtg_foundation: "draw_wtg_foundation"

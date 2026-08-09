@@ -1,0 +1,14 @@
+# 领域配置: electronics_semi
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "electronics_semi"
+module: "envcad.standards.electronics_semi"
+description: "电子与半导体（PCB外形框/IC封装QFP·BGA/连接器/散热器/机箱面板）"
+functions:
+  board_outline: "draw_board_outline"
+  ic_qfp: "draw_ic_qfp"
+  ic_bga: "draw_ic_bga"
+  connector: "draw_connector"
+  heatsink: "draw_heatsink"
+  enclosure: "draw_enclosure"

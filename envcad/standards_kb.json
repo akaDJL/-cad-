@@ -1,0 +1,395 @@
+{
+  "meta": {
+    "name": "凹凸CAD小助手 规范知识库",
+    "version": "0.1.0-mvp",
+    "updated": "2026-07-31",
+    "schema": "十维度分类骨架 v1",
+    "description": "阶段1 MVP 雏形：先填建筑行业 GB/T 50001-2017 + GB/T 50106-2010 核心规则，供执行引擎与校验层消费",
+    "dimensions": [
+      "Sheet", "Line", "Text", "Scale", "Symbol",
+      "AxisGrid", "Legend", "Method", "Dimension", "CADLayer"
+    ]
+  },
+
+  "industries": {
+    "building": {
+      "name_cn": "工程建设",
+      "base_standard": "GB/T 50001-2017",
+      "specialties": ["general_plan", "architecture", "structure", "water", "hvac"]
+    },
+    "mechanical": {
+      "name_cn": "机械制造",
+      "base_standard": "GB/T 17450-1998",
+      "specialties": ["mechanical_drawing"]
+    },
+    "electrical": {
+      "name_cn": "电气电子",
+      "base_standard": "GB/T 6988",
+      "specialties": ["schematic", "wiring"]
+    }
+  },
+
+  "standards": [
+    {
+      "id": "GB/T 50001-2017",
+      "name_cn": "房屋建筑制图统一标准",
+      "scope": "通用基础",
+      "industry": "building",
+      "status": "现行",
+      "replaces": "GB/T 50001-2001"
+    },
+    {
+      "id": "GB/T 50106-2010",
+      "name_cn": "建筑给水排水制图标准",
+      "scope": "专业-给排水",
+      "industry": "building",
+      "status": "现行",
+      "replaces": "GB/T 50106-2001"
+    },
+    {
+      "id": "GB/T 50104-2010",
+      "name_cn": "建筑制图标准",
+      "scope": "专业-建筑",
+      "industry": "building",
+      "status": "现行"
+    }
+  ],
+
+  "rules": {
+
+    "Sheet": [
+      {
+        "dim": "Sheet",
+        "std": "GB/T 50001-2017",
+        "clause": "3.1",
+        "industry": ["building"],
+        "name": "图纸幅面尺寸",
+        "param": {
+          "series": ["A0", "A1", "A2", "A3", "A4"],
+          "size_mm": {
+            "A0": { "w": 841, "h": 1189 },
+            "A1": { "w": 594, "h": 841 },
+            "A2": { "w": 420, "h": 594 },
+            "A3": { "w": 297, "h": 420 },
+            "A4": { "w": 210, "h": 297 }
+          },
+          "border_c_mm": 10,
+          "border_e_mm_large": 20,
+          "border_e_mm_small": 10,
+          "note": "c为装订边，e为非装订边；A0-A1 e=20，A2-A4 e=10"
+        },
+        "cadExec": {
+          "tool": "drawTitleBlock",
+          "insertBlock": "图框_横式_A{0}",
+          "args": ["sheet"]
+        }
+      }
+    ],
+
+    "Line": [
+      {
+        "dim": "Line",
+        "std": "GB/T 50001-2017",
+        "clause": "4.0.1",
+        "industry": ["building"],
+        "name": "线宽组",
+        "param": {
+          "b_series_mm": [2.0, 1.4, 1.0, 0.7, 0.5, 0.35],
+          "ratio": { "thick": 1.0, "mid": 0.5, "thin": 0.25 },
+          "minWidth_mm": 0.1,
+          "note": "每个图样先选定基本线宽b，再按4:2:1确定粗中细"
+        },
+        "cadExec": {
+          "tool": "buildLineLayers",
+          "layers": [
+            { "name": "粗实线", "lineweight": "=b", "linetype": "Continuous" },
+            { "name": "中实线", "lineweight": "=0.5b", "linetype": "Continuous" },
+            { "name": "细实线", "lineweight": "=0.25b", "linetype": "Continuous" },
+            { "name": "中虚线", "lineweight": "=0.5b", "linetype": "DASHED" },
+            { "name": "细单点长画线", "lineweight": "=0.25b", "linetype": "CENTER" },
+            { "name": "细双点长画线", "lineweight": "=0.25b", "linetype": "PHANTOM" }
+          ]
+        }
+      },
+      {
+        "dim": "Line",
+        "std": "GB/T 50106-2010",
+        "clause": "2.1.1",
+        "industry": ["building"],
+        "name": "给排水线宽",
+        "param": {
+          "b_recommended_mm": [0.7, 1.0],
+          "note": "给排水专业基本线宽b宜为0.7或1.0mm"
+        },
+        "cadExec": { "tool": "buildLineLayers", "override_b": [0.7, 1.0] }
+      }
+    ],
+
+    "Text": [
+      {
+        "dim": "Text",
+        "std": "GB/T 50001-2017",
+        "clause": "5",
+        "industry": ["building"],
+        "name": "字体与字高",
+        "param": {
+          "height_series_mm": [3.5, 5, 7, 10, 14, 20, 28],
+          "min_height_mm": 3.5,
+          "chinese_font": "长仿宋",
+          "width_ratio": 0.7
+        },
+        "cadExec": {
+          "tool": "createTextStyle",
+          "styleName": "工程字",
+          "fontFile": "hztxt.shx",
+          "widthFactor": 0.7
+        }
+      }
+    ],
+
+    "Scale": [
+      {
+        "dim": "Scale",
+        "std": "GB/T 50001-2017",
+        "clause": "6",
+        "industry": ["building"],
+        "name": "常用比例系列",
+        "param": {
+          "original": ["1:1"],
+          "reduction": ["1:2", "1:5", "1:10", "1:20", "1:50", "1:100", "1:150", "1:200", "1:500", "1:1000", "1:2000"],
+          "enlargement": ["2:1", "5:1", "10:1"]
+        },
+        "cadExec": { "tool": "setDimScale", "fromVar": "dimscale" }
+      },
+      {
+        "dim": "Scale",
+        "std": "GB/T 50106-2010",
+        "clause": "2.2",
+        "industry": ["building"],
+        "name": "给排水平面图常用比例",
+        "param": {
+          "plan_common": ["1:100", "1:150", "1:200", "1:50"],
+          "system_diagram": ["1:100", "1:200", "不按比例"]
+        }
+      }
+    ],
+
+    "Symbol": [
+      {
+        "dim": "Symbol",
+        "std": "GB/T 50001-2017",
+        "clause": "7.1",
+        "industry": ["building"],
+        "name": "剖切符号",
+        "param": {
+          "line_width": "粗实线",
+          "length_mm": { "projection": 6, "section": 4 },
+          "index_format": "编号/所在图纸号"
+        },
+        "cadExec": { "tool": "insertSectionSymbol", "block": "剖切符号" }
+      },
+      {
+        "dim": "Symbol",
+        "std": "GB/T 50001-2017",
+        "clause": "7.4",
+        "industry": ["building"],
+        "name": "标高符号",
+        "param": {
+          "shape": "等腰直角三角形",
+          "height_mm": 3,
+          "line_width": "细实线"
+        },
+        "cadExec": { "tool": "insertElevation", "block": "标高符号" }
+      }
+    ],
+
+    "AxisGrid": [
+      {
+        "dim": "AxisGrid",
+        "std": "GB/T 50001-2017",
+        "clause": "8",
+        "industry": ["building"],
+        "name": "定位轴线",
+        "param": {
+          "circle_diameter_mm": 8,
+          "line_width": "细单点长画线",
+          "horizontal_label": ["1", "2", "3", "..."],
+          "vertical_label": ["A", "B", "C", "..."],
+          "skip_letters": ["I", "O", "Z"]
+        },
+        "cadExec": { "tool": "buildAxisGrid", "block": "轴线编号" }
+      }
+    ],
+
+    "Legend": [
+      {
+        "dim": "Legend",
+        "std": "GB/T 50001-2017",
+        "clause": "9",
+        "industry": ["building"],
+        "name": "建筑材料图例（节选）",
+        "param": {
+          "items": {
+            "砖": { "pattern": "45°斜线", "line": "细实线", "spacing_mm": 4 },
+            "混凝土": { "pattern": "三角形点", "line": "细实线" },
+            "钢筋混凝土": { "pattern": "斜线+三角形点" },
+            "自然土壤": { "pattern": "齿状线" },
+            "夯实土壤": { "pattern": "平行斜线" },
+            "木材": { "pattern": "木纹" }
+          }
+        },
+        "cadExec": { "tool": "applyHatch", "byMaterial": true }
+      },
+      {
+        "dim": "Legend",
+        "std": "GB/T 50106-2010",
+        "clause": "3",
+        "industry": ["building"],
+        "name": "给排水图例（节选）",
+        "param": {
+          "pipes": {
+            "给水管": { "line": "中粗实线", "color": "蓝" },
+            "排水管": { "line": "中粗虚线", "color": "绿" },
+            "热水管": { "line": "中粗实线", "color": "红" }
+          },
+          "fittings": ["弯头", "三通", "四通", "阀门", "水表", "消火栓"],
+          "fixtures": ["洗脸盆", "大便器", "地漏", "检查口"]
+        },
+        "cadExec": { "tool": "insertLegendBlock", "lib": "water" }
+      }
+    ],
+
+    "Method": [
+      {
+        "dim": "Method",
+        "std": "GB/T 50001-2017",
+        "clause": "10",
+        "industry": ["building"],
+        "name": "图样画法",
+        "param": {
+          "projection": "第一角正投影",
+          "section_line": "粗实线",
+          "visible_outline": "粗实线",
+          "hidden_line": "中虚线"
+        }
+      },
+      {
+        "dim": "Method",
+        "std": "GB/T 50106-2010",
+        "clause": "4",
+        "industry": ["building"],
+        "name": "给排水图样画法",
+        "param": {
+          "plan": "建筑给水排水平面图",
+          "system_diagram": "管道系统图（轴测）",
+          "flow_diagram": "水净化处理流程图"
+        }
+      }
+    ],
+
+    "Dimension": [
+      {
+        "dim": "Dimension",
+        "std": "GB/T 50001-2017",
+        "clause": "11.1",
+        "industry": ["building"],
+        "name": "尺寸起止符号",
+        "param": {
+          "type": "45°中粗短斜线",
+          "length_mm": 2,
+          "line_width": "0.5b",
+          "extension_beyond_mm": 2
+        },
+        "cadExec": {
+          "tool": "setDimStyle",
+          "dimblk": "_ARCHTICK",
+          "dimasz": 2,
+          "dimexe": 2
+        }
+      },
+      {
+        "dim": "Dimension",
+        "std": "GB/T 50001-2017",
+        "clause": "11.8",
+        "industry": ["building"],
+        "name": "标高标注",
+        "param": {
+          "unit_m": true,
+          "precision": 3,
+          "format": "±0.000",
+          "note": "单位为米，注至小数点后3位"
+        },
+        "cadExec": { "tool": "setDimStyle", "dimunit_override": "m" }
+      },
+      {
+        "dim": "Dimension",
+        "std": "GB/T 50106-2010",
+        "clause": "2.4",
+        "industry": ["building"],
+        "name": "管径标注",
+        "param": {
+          "unit_mm": true,
+          "format": "DN{value}",
+          "examples": ["DN50", "DN100"],
+          "note": "以毫米计，加注DN"
+        },
+        "cadExec": { "tool": "labelPipeDiameter" }
+      }
+    ],
+
+    "CADLayer": [
+      {
+        "dim": "CADLayer",
+        "std": "GB/T 50001-2017",
+        "clause": "13 + 附录B",
+        "industry": ["building"],
+        "name": "图层命名规则",
+        "param": {
+          "format": "主组-子组-状态",
+          "common_layers": [
+            "建筑-墙", "建筑-门窗", "建筑-楼梯",
+            "结构-梁", "结构-柱",
+            "给排水-管道", "给排水-设备",
+            "暖通-风管",
+            "标注-尺寸", "标注-文字",
+            "轴线", "图框"
+          ]
+        },
+        "cadExec": { "tool": "createLayers", "fromStandard": "附录B" }
+      }
+    ]
+  },
+
+  "complianceChecks": [
+    {
+      "id": "CHK-LINE-01",
+      "dim": "Line",
+      "rule": "实体线宽必须落在合规线宽组 {2.0,1.4,1.0,0.7,0.5,0.35} 之一",
+      "severity": "warning"
+    },
+    {
+      "id": "CHK-LAYER-01",
+      "dim": "CADLayer",
+      "rule": "图层名应符合 GB/T 50001 附录B命名（主组-子组-状态）",
+      "severity": "error"
+    },
+    {
+      "id": "CHK-DIM-01",
+      "dim": "Dimension",
+      "rule": "建筑标注起止符号须为45°中粗短斜线（ARCHTICK），不可用箭头",
+      "severity": "error"
+    },
+    {
+      "id": "CHK-TEXT-01",
+      "dim": "Text",
+      "rule": "汉字字高不得小于3.5mm",
+      "severity": "error"
+    },
+    {
+      "id": "CHK-AXIS-01",
+      "dim": "AxisGrid",
+      "rule": "轴线编号圆圈直径宜为8mm，跳过I/O/Z字母",
+      "severity": "warning"
+    }
+  ]
+}

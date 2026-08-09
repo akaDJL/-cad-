@@ -1,0 +1,11 @@
+# 领域配置: environmental
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "environmental"
+module: "envcad.standards.environmental"
+description: ""
+functions:
+  monitoring_point: "draw_monitoring_point"
+  process_box: "draw_process_box"
+  noise_monitoring: "draw_noise_monitoring"

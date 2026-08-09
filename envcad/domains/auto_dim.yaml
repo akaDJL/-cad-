@@ -1,0 +1,12 @@
+# 领域配置: auto_dim
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "auto_dim"
+module: "envcad.standards.auto_dim"
+description: "自动尺寸链引擎（链式/基线/坐标/智能标注）"
+functions:
+  chain: "auto_chain_dim"
+  baseline: "auto_baseline_dim"
+  ordinate: "auto_ordinate_dim"
+  smart: "auto_smart_dim"

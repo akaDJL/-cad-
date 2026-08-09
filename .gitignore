@@ -1,0 +1,34 @@
+# ── Python ──────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.env
+pip-wheel-metadata/
+
+# ── 项目生成物（可由命令重新生成，不入库）─────────────
+out/
+output/
+backups/
+*.dxf
+*.dwg
+*.bak
+
+# ── 工具链缓存 ──────────────────────────────────────────
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+debug_archive/
+
+# ── 系统/编辑器 ────────────────────────────────────────
+Thumbs.db
+Desktop.ini
+.DS_Store
+.idea/
+.vscode/

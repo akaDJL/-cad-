@@ -1,0 +1,14 @@
+# 领域配置: oxidation_ditch（氧化沟多视图）
+# 由 auto_registry 自动扫描加载，无需修改 cli.py。
+# 各视图函数支持无参调用（默认取 knowledge.oxidation_ditch_data.OD_DEFAULTS），
+# 也可由设计层传入参数 dict p 驱动。
+
+name: "oxidation_ditch"
+module: "envcad.standards.oxidation_ditch"
+description: "氧化沟多视图（平面/横剖面/转刷曝气机/出水堰门/推流器）"
+functions:
+  od_plan: "draw_od_plan"
+  od_section: "draw_od_section"
+  od_brush: "draw_od_brush"
+  od_weir: "draw_od_weir"
+  od_pusher: "draw_od_pusher"

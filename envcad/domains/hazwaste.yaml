@@ -1,0 +1,14 @@
+# 领域配置: hazwaste（危险废物暂存间多视图）
+# 由 auto_registry 自动扫描加载，无需修改 cli.py。
+# 各视图函数支持无参调用（默认取 knowledge.hazwaste_data.HW_DEFAULTS），
+# 也可由设计层传入参数 dict p 驱动。
+
+name: "hazwaste"
+module: "envcad.standards.hazwaste"
+description: "危废暂存间多视图（平面分区/防渗剖面/收集池/通风/标识）"
+functions:
+  hw_plan: "draw_hw_plan"
+  hw_section: "draw_hw_section"
+  hw_sump: "draw_hw_sump"
+  hw_ventilation: "draw_hw_ventilation"
+  hw_signage: "draw_hw_signage"

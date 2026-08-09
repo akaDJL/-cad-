@@ -1,0 +1,26 @@
+# 领域配置: mechanical
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "mechanical"
+module: "envcad.standards.mechanical"
+description: "机械制造（齿轮/轴/轴承/键/螺纹/螺栓/弹簧/挡圈/油封/中心孔）"
+functions:
+  spur_gear: "draw_spur_gear"
+  helical_gear: "draw_helical_gear"
+  bevel_gear_pair: "draw_bevel_gear_pair"
+  worm_gear_pair: "draw_worm_gear_pair"
+  stepped_shaft: "draw_stepped_shaft"
+  spline_shaft: "draw_spline_shaft"
+  rolling_bearing: "draw_rolling_bearing"
+  key: "draw_key"
+  thread: "draw_thread"
+  bolt_connection: "draw_bolt_connection"
+  compression_spring: "draw_compression_spring"
+  extension_spring: "draw_extension_spring"
+  circlip: "draw_circlip"
+  oil_seal: "draw_oil_seal"
+  center_hole: "draw_center_hole"
+  cam_disk: "draw_cam_disk"
+  chain_sprocket: "draw_chain_sprocket"
+  coupling: "draw_coupling"

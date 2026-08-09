@@ -1,0 +1,23 @@
+# 领域配置: valves_fittings
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "valves_fittings"
+module: "envcad.components.fittings"
+description: "环保阀门管件库（蝶阀/隔膜阀/截止阀/球阀/止回阀/取样阀/弯头/三通/异径管/法兰）"
+functions:
+  butterfly_valve: "draw_butterfly_valve"
+  diaphragm_valve: "draw_diaphragm_valve"
+  globe_valve: "draw_globe_valve"
+  ball_valve: "draw_ball_valve"
+  check_valve: "draw_check_valve"
+  sampling_valve: "draw_sampling_valve"
+  regulating_valve: "draw_regulating_valve"
+  plug_valve: "draw_plug_valve"
+  gate_valve: "draw_valve"
+  elbow: "draw_elbow"
+  tee: "draw_tee"
+  reducer: "draw_reducer"
+  flange_pair: "draw_flange_pair"
+  cross: "draw_cross"
+  instrument_symbol: "draw_instrument_symbol"

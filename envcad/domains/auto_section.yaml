@@ -1,0 +1,10 @@
+# 领域配置: auto_section
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "auto_section"
+module: "envcad.standards.auto_section"
+description: "剖面自动生成（轮廓→剖切线+剖面视图）"
+functions:
+  from_outline: "generate_section_from_outline"
+  quick: "quick_section"

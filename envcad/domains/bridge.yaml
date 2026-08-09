@@ -1,0 +1,15 @@
+# 领域配置: bridge
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "bridge"
+module: "envcad.standards.bridge"
+description: "桥梁结构（箱梁/沉井/隔震/柱脚/组合柱/脚手架）"
+functions:
+  box_girder: "draw_box_girder"
+  open_caisson: "draw_open_caisson"
+  seismic_isolator: "draw_seismic_isolator"
+  column_base: "draw_column_base"
+  composite_column: "draw_composite_column"
+  scaffold: "draw_scaffold"
+  bridge_deck: "draw_bridge_deck"

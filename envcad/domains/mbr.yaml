@@ -1,0 +1,15 @@
+# 领域配置: mbr（MBR 膜生物反应器多视图）
+# 由 auto_registry 自动扫描加载，无需修改 cli.py。
+# 各视图函数支持无参调用（默认取 knowledge.mbr_data.MBR_DEFAULTS），
+# 也可由设计层传入参数 dict p 驱动。
+
+name: "mbr"
+module: "envcad.standards.mbr"
+description: "MBR膜生物反应器多视图（膜箱外形/平面/剖面/膜组件/抽吸反洗/膜列）"
+functions:
+  mbr_elevation: "draw_mbr_elevation"
+  mbr_plan: "draw_mbr_plan"
+  mbr_section: "draw_mbr_section"
+  mbr_module: "draw_mbr_module"
+  mbr_backwash: "draw_mbr_backwash"
+  mbr_train: "draw_mbr_train"

@@ -1,0 +1,14 @@
+# 领域配置: wesp（湿式静电除尘器多视图）
+# 由 auto_registry 自动扫描加载，无需修改 cli.py。
+# 各视图函数支持无参调用（默认取 knowledge.wesp_data.WESP_DEFAULTS），
+# 也可由设计层传入参数 dict p 驱动。
+
+name: "wesp"
+module: "envcad.standards.wesp"
+description: "湿式静电除尘器多视图（外形/剖面/管束平面/冲洗系统/绝缘箱）"
+functions:
+  wesp_elevation: "draw_wesp_elevation"
+  wesp_section: "draw_wesp_section"
+  wesp_tube: "draw_wesp_tube"
+  wesp_spray: "draw_wesp_spray"
+  wesp_insulation: "draw_wesp_insulation"

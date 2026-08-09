@@ -1,0 +1,13 @@
+# 领域配置: pid
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "pid"
+module: "envcad.standards.pid"
+description: "P&ID 管道仪表图（容器/仪表/控制阀/换热器/精馏塔）"
+functions:
+  vessel: "draw_vessel"
+  instrument: "draw_instrument"
+  control_valve: "draw_control_valve"
+  heat_exchanger: "draw_heat_exchanger"
+  distillation_tower: "draw_distillation_tower"

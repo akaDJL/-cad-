@@ -1,0 +1,15 @@
+# 领域配置: spray_tower（湿法脱硫塔多视图）
+# 由 auto_registry 自动扫描加载。
+# 单图调用需传 design 参数 p；成套出图（A/B/C）推荐：
+#   envcad equip spray_tower --level B --air_flow 50000 --so2 2000
+
+name: "spray_tower"
+module: "envcad.standards.spray_tower"
+description: "湿法脱硫塔多视图（外形/平面/剖面/喷淋层/除雾器/浆池循环）"
+functions:
+  spray_tower_elevation: "draw_spray_tower_elevation"
+  spray_tower_plan: "draw_spray_tower_plan"
+  spray_tower_section: "draw_spray_tower_section"
+  spray_tower_spray_layer: "draw_spray_tower_spray_layer"
+  spray_tower_demister: "draw_spray_tower_demister"
+  spray_tower_slurry_system: "draw_spray_tower_slurry_system"

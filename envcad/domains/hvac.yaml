@@ -1,0 +1,16 @@
+# 领域配置: hvac
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "hvac"
+module: "envcad.standards.hvac"
+description: "暖通空调（风管/风口/空调机组/风机盘管/冷却塔/冷水机组/锅炉）"
+functions:
+  duct_plan: "draw_duct_plan"
+  duct_section: "draw_duct_section"
+  air_outlet: "draw_air_outlet"
+  ahu: "draw_ahu"
+  fan_coil: "draw_fan_coil"
+  cooling_tower: "draw_cooling_tower"
+  chiller: "draw_chiller"
+  boiler: "draw_boiler"

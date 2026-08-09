@@ -1,0 +1,15 @@
+# 领域配置: electrical
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "electrical"
+module: "envcad.standards.electrical"
+description: "电气系统（断路器/接触器/电机/变压器/端子）"
+functions:
+  breaker: "draw_breaker"
+  contactor: "draw_contactor"
+  motor_symbol: "draw_motor_symbol"
+  transformer: "draw_transformer"
+  terminal: "draw_terminal"
+  single_line: "draw_single_line_diagram"
+  lighting: "draw_lighting_layout"

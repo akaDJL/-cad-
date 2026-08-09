@@ -1,0 +1,126 @@
+# 行业 → 适用标准映射表
+# 凹凸CAD小助手（二集）v1.4 — 规范知识库索引
+# version: 0.1.0-mvp  2026-07-31
+
+industries:
+
+  building:
+    name_cn: 工程建设
+    base_standard: GB/T 50001-2017
+    kb_entry: rules.*  # 默认加载建筑通用规则
+    specialties:
+      general_plan:
+        name_cn: 总图
+        standard: GB/T 50103-2010
+        status: planned   # 阶段2
+      architecture:
+        name_cn: 建筑
+        standard: GB/T 50104-2010
+        status: planned
+      structure:
+        name_cn: 结构
+        standard: GB/T 50105-2010
+        status: planned
+      water:
+        name_cn: 给排水
+        standard: GB/T 50106-2010
+        status: ready      # 阶段1 MVP 已填充
+        kb_entry: rules.Line[*].std==GB/T 50106-2010
+      hvac:
+        name_cn: 暖通
+        standard: GB/T 50114-2010
+        status: planned
+
+  mechanical:
+    name_cn: 机械制造
+    base_standard: GB/T 17450-1998
+    status: planned       # 阶段3
+    standards:
+      - GB/T 14689-2022  # 图纸幅面
+      - GB/T 14690-2008  # 比例
+      - GB/T 14691-2021  # 字体
+      - GB/T 17450-1998  # 图线（通用）
+      - GB/T 4457.4-2002 # 图线（机械）
+      - GB/T 4458.x      # 画法
+    overrides:
+      line_width_ratio: "粗:细=2:1"
+      dim_arrow: true    # 用箭头而非45°斜线
+
+  electrical:
+    name_cn: 电气电子
+    base_standard: GB/T 6988
+    status: planned       # 阶段5
+    standards:
+      - GB/T 6988.x      # 电气制图系列
+      - GB/T 4728.x      # 图形符号
+      - GB/T 5465.x      # 设备用图形符号
+
+  energy_chemical:
+    name_cn: 能源化工
+    base_standard: GB/T 150-2011
+    status: ready
+    standards:
+      - GB/T 150 压力容器
+      - GB/T 151 热交换器
+      - GB/T 5656 离心泵
+      - HG/T 20569 反应釜
+      - GB 50316 工业金属管道
+      - GB 50797 光伏发电站
+  electronics_semi:
+    name_cn: 电子与半导体
+    base_standard: GB/T 4588.3
+    status: ready
+    standards:
+      - GB/T 4588 印制板
+      - IPC-2221 通用设计
+      - IEC 61076 连接器
+      - IEC 60297 机箱
+  agri_food:
+    name_cn: 农业食品机械
+    base_standard: GB/T 50485-2020
+    status: ready
+    standards:
+      - GB/T 50485 微灌
+      - JB/T 7679 螺旋输送机
+      - GB/T 6960 拖拉机术语
+      - GB 16798 食品机械安全
+  survey_gis:
+    name_cn: 测绘与GIS
+    base_standard: GB/T 20257.1-2017
+    status: ready
+    standards:
+      - GB/T 20257.1 地形图图式
+      - GB/T 12898 测量控制点
+      - CJJ/T 158 管线探测
+      - GB/T 50103 总图
+
+# 行业识别规则：插件据此自动判断当前图纸归属行业
+detection:
+  rules:
+    - signal: title_block_specialty
+      match: [给排水, 水暖, 给水, 排水]
+      industry: building
+      specialty: water
+    - signal: filename_prefix
+      match: [水施, 水图]
+      industry: building
+      specialty: water
+    - signal: title_block_specialty
+      match: [建筑, 建施]
+      industry: building
+      specialty: architecture
+    - signal: title_block_specialty
+      match: [结构, 结施]
+      industry: building
+      specialty: structure
+    - signal: title_block_specialty
+      match: [暖通, 暖施, 空调]
+      industry: building
+      specialty: hvac
+    - signal: filename_prefix
+      match: [机加, 零件图, 装配图]
+      industry: mechanical
+    - signal: filename_prefix
+      match: [电气, 原理图, 接线图]
+      industry: electrical
+  fallback: building   # 默认按建筑处理

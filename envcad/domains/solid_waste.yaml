@@ -1,0 +1,17 @@
+# 领域配置: solid_waste
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "solid_waste"
+module: "envcad.standards.solid_waste"
+description: ""
+functions:
+  landfill_section: "draw_landfill_section"
+  leachate_collection: "draw_leachate_collection"
+  incinerator_flow: "draw_incinerator_flow"
+  incinerator_section: "draw_incinerator_section"
+  composting: "draw_composting"
+  anaerobic_digester: "draw_anaerobic_digester"
+  sorting_line: "draw_sorting_line"
+  transfer_station: "draw_transfer_station"
+  incinerator: "draw_incinerator"

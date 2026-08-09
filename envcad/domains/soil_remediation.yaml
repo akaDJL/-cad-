@@ -1,0 +1,14 @@
+# 领域配置: soil_remediation
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "soil_remediation"
+module: "envcad.standards.soil_remediation"
+description: ""
+functions:
+  injection_well_grid: "draw_injection_well_grid"
+  injection_profile: "draw_injection_profile"
+  pump_treat_flow: "draw_pump_treat_flow"
+  thermal_desorption: "draw_thermal_desorption"
+  sve_system: "draw_sve_system"
+  cutoff_wall: "draw_cutoff_wall"

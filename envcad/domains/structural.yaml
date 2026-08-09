@@ -1,0 +1,15 @@
+# 领域配置: structural
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "structural"
+module: "envcad.standards.structural"
+description: "土木结构（预应力梁/砌体墙/钢框架/桁架/桥墩/隧道/边坡）"
+functions:
+  prestressed_beam: "draw_prestressed_beam"
+  masonry_wall: "draw_masonry_wall"
+  steel_frame: "draw_steel_frame"
+  truss: "draw_truss"
+  bridge_pier: "draw_bridge_pier"
+  tunnel_section: "draw_tunnel_section"
+  slope_protection: "draw_slope_protection"

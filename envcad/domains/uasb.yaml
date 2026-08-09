@@ -1,0 +1,15 @@
+# 领域配置: uasb（UASB 厌氧反应器多视图）
+# 由 auto_registry 自动扫描加载。
+# 注意：各视图函数需 design 参数 p（dict）。单图调用请传 p，
+# 成套出图（A/B/C 分级）推荐用：envcad equip uasb --level B --q 500 --cod 3000
+
+name: "uasb"
+module: "envcad.standards.uasb"
+description: "UASB厌氧反应器多视图（外形/平面/剖面/三相分离器/布水/出水堰）"
+functions:
+  uasb_elevation: "draw_uasb_elevation"
+  uasb_plan: "draw_uasb_plan"
+  uasb_section: "draw_uasb_section"
+  uasb_three_phase: "draw_uasb_three_phase"
+  uasb_distributor: "draw_uasb_distributor"
+  uasb_outlet_weir: "draw_uasb_outlet_weir"

@@ -1,0 +1,14 @@
+# 领域配置: fgd（石灰石-石膏湿法脱硫塔多视图）
+# 由 auto_registry 自动扫描加载，无需修改 cli.py。
+# 各视图函数支持无参调用（默认取 knowledge.fgd_data.FGD_DEFAULTS），
+# 也可由设计层传入参数 dict p 驱动。
+
+name: "fgd"
+module: "envcad.standards.fgd"
+description: "湿法脱硫塔多视图（外形/剖面/喷淋层/除雾器/循环浆液）"
+functions:
+  fgd_elevation: "draw_fgd_elevation"
+  fgd_section: "draw_fgd_section"
+  fgd_spray_layer: "draw_fgd_spray_layer"
+  fgd_demister: "draw_fgd_demister"
+  fgd_circulation: "draw_fgd_circulation"

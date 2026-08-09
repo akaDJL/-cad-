@@ -1,0 +1,14 @@
+# 领域配置: rto（RTO 蓄热式焚烧炉多视图）
+# 由 auto_registry 自动扫描加载，无需修改 cli.py。
+# 各视图函数支持无参调用（默认取 knowledge.rto_data.RTO_DEFAULTS），
+# 也可由设计层传入参数 dict p 驱动。
+
+name: "rto"
+module: "envcad.standards.rto"
+description: "RTO蓄热焚烧炉多视图（外形/平面/剖面/切换阀/工艺流程）"
+functions:
+  rto_elevation: "draw_rto_elevation"
+  rto_plan: "draw_rto_plan"
+  rto_section: "draw_rto_section"
+  rto_valve: "draw_rto_valve"
+  rto_flow: "draw_rto_flow"

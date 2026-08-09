@@ -1,0 +1,14 @@
+# 领域配置: sludge_dewatering（污泥脱水机房多视图）
+# 由 auto_registry 自动扫描加载，无需修改 cli.py。
+# 各视图函数支持无参调用（默认取 knowledge.sludge_dewatering_data.SD_DEFAULTS），
+# 也可由设计层传入参数 dict p 驱动。
+
+name: "sludge_dewatering"
+module: "envcad.standards.sludge_dewatering"
+description: "污泥脱水机房多视图（带机/板框立面平面/加药调理/机房布置）"
+functions:
+  sd_belt_press: "draw_sd_belt_press"
+  sd_filter_press: "draw_sd_filter_press"
+  sd_filter_press_plan: "draw_sd_filter_press_plan"
+  sd_conditioning: "draw_sd_conditioning"
+  sd_room_layout: "draw_sd_room_layout"

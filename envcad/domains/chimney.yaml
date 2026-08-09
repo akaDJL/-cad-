@@ -1,0 +1,14 @@
+# 领域配置: chimney（钢烟囱多视图）
+# 由 auto_registry 自动扫描加载。
+# 成套出图（A/B/C）推荐：envcad equip chimney --level B --air_flow 50000 --height 30
+
+name: "chimney"
+module: "envcad.standards.chimney"
+description: "钢烟囱多视图（外形/平面/剖面/采样孔/平台/基础）"
+functions:
+  chimney_elevation: "draw_chimney_elevation"
+  chimney_plan: "draw_chimney_plan"
+  chimney_section: "draw_chimney_section"
+  chimney_sample_port: "draw_chimney_sample_port"
+  chimney_platform: "draw_chimney_platform"
+  chimney_foundation: "draw_chimney_foundation"

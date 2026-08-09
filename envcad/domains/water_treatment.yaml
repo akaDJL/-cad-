@@ -1,0 +1,14 @@
+# 领域配置: water_treatment
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "water_treatment"
+module: "envcad.standards.treatment"
+description: ""
+functions:
+  aeration_tank: "draw_aeration_tank"
+  sludge_system: "draw_sludge_system"
+  chemical_dosing: "draw_chemical_dosing"
+  bar_screen: "draw_bar_screen"
+  membrane_system: "draw_membrane_system"
+  disinfection: "draw_disinfection"

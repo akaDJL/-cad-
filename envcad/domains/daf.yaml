@@ -1,0 +1,14 @@
+# 领域配置: daf（溶气气浮机多视图）
+# 由 auto_registry 自动扫描加载，无需修改 cli.py。
+# 各视图函数支持无参调用（默认取 knowledge.daf_data.DAF_DEFAULTS），
+# 也可由设计层传入参数 dict p 驱动。
+
+name: "daf"
+module: "envcad.standards.daf"
+description: "溶气气浮机多视图（外形/平面/剖面/溶气系统/刮渣系统）"
+functions:
+  daf_elevation: "draw_daf_elevation"
+  daf_plan: "draw_daf_plan"
+  daf_section: "draw_daf_section"
+  daf_saturation: "draw_daf_saturation"
+  daf_skimmer: "draw_daf_skimmer"

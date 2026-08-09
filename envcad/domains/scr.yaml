@@ -1,0 +1,14 @@
+# 领域配置: scr（SCR 脱硝反应器多视图）
+# 由 auto_registry 自动扫描加载，无需修改 cli.py。
+# 各视图函数支持无参调用（默认取 knowledge.scr_data.SCR_DEFAULTS），
+# 也可由设计层传入参数 dict p 驱动。
+
+name: "scr"
+module: "envcad.standards.scr"
+description: "SCR脱硝反应器多视图（外形/剖面/催化剂层/喷氨格栅/吹灰）"
+functions:
+  scr_elevation: "draw_scr_elevation"
+  scr_section: "draw_scr_section"
+  scr_catalyst: "draw_scr_catalyst"
+  scr_ammonia_grid: "draw_scr_ammonia_grid"
+  scr_sootblower: "draw_scr_sootblower"

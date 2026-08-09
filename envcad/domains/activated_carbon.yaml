@@ -1,0 +1,15 @@
+# 领域配置: activated_carbon（活性炭吸附装置多视图）
+# 由 auto_registry 自动扫描加载。
+# 单图调用需传 design 参数 p；成套出图（A/B/C）推荐：
+#   envcad equip activated_carbon --level B --air_flow 10000 --voc 200
+
+name: "activated_carbon"
+module: "envcad.standards.activated_carbon"
+description: "活性炭吸附装置多视图（外形/平面/剖面/炭层/脱附/管路）"
+functions:
+  ac_elevation: "draw_ac_elevation"
+  ac_plan: "draw_ac_plan"
+  ac_section: "draw_ac_section"
+  ac_carbon_bed: "draw_ac_carbon_bed"
+  ac_desorption: "draw_ac_desorption"
+  ac_piping: "draw_ac_piping"

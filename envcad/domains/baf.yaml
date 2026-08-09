@@ -1,0 +1,14 @@
+# 领域配置: baf（曝气生物滤池多视图）
+# 由 auto_registry 自动扫描加载，无需修改 cli.py。
+# 各视图函数支持无参调用（默认取 knowledge.baf_data.BAF_DEFAULTS），
+# 也可由设计层传入参数 dict p 驱动。
+
+name: "baf"
+module: "envcad.standards.baf"
+description: "曝气生物滤池多视图（外形/剖面/滤板滤头/反冲洗/曝气）"
+functions:
+  baf_elevation: "draw_baf_elevation"
+  baf_section: "draw_baf_section"
+  baf_filter_floor: "draw_baf_filter_floor"
+  baf_backwash: "draw_baf_backwash"
+  baf_aeration: "draw_baf_aeration"

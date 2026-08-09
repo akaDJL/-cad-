@@ -1,0 +1,18 @@
+# 领域配置: building
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "building"
+module: "envcad.standards.building"
+description: "建筑制图（层高剖面/平面布置/墙体/柱/梁/门窗/楼梯）"
+functions:
+  floor_section: "draw_floor_section"
+  floor_plan: "draw_floor_plan"
+  wall: "draw_wall_elevation"
+  column: "draw_column"
+  beam: "draw_beam"
+  door: "draw_door_opening"
+  window: "draw_window_opening"
+  staircase: "draw_staircase"
+  roof_plan: "draw_roof_plan"
+  schedule_table: "draw_schedule_table"

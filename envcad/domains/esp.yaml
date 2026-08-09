@@ -1,0 +1,15 @@
+# 领域配置: esp（静电除尘器多视图）
+# 由 auto_registry 自动扫描加载，无需修改 cli.py。
+# 各视图函数支持无参调用（默认取 knowledge.esp_data.ESP_DEFAULTS），
+# 也可由设计层传入参数 dict p 驱动。
+
+name: "esp"
+module: "envcad.standards.esp"
+description: "静电除尘器多视图（外形/平面/剖面/阴阳极/振打/灰斗输灰）"
+functions:
+  esp_elevation: "draw_esp_elevation"
+  esp_plan: "draw_esp_plan"
+  esp_section: "draw_esp_section"
+  esp_electrode: "draw_esp_electrode"
+  esp_rapping: "draw_esp_rapping"
+  esp_hopper: "draw_esp_hopper"

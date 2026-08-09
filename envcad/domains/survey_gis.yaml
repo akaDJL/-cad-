@@ -1,0 +1,14 @@
+# 领域配置: survey_gis
+# 此文件由 auto_registry 自动扫描加载，新增领域只需在此目录放入 YAML 文件
+# 无需修改 cli.py 或 knowledge/__init__.py
+
+name: "survey_gis"
+module: "envcad.standards.survey_gis"
+description: "测绘与GIS（地形图符号库/测量控制点/管线探测图/竣工测绘图框/红线用地图）"
+functions:
+  topo_symbols: "draw_topo_symbols"
+  control_point: "draw_control_point"
+  control_network: "draw_control_network"
+  pipe_detection: "draw_pipe_detection"
+  as_built_frame: "draw_as_built_frame"
+  boundary: "draw_boundary"
