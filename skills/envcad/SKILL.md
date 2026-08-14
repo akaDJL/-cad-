@@ -38,7 +38,7 @@ pip install pywin32
 pip install openpyxl python-docx
 ```
 
-> 本技能目录即仓库根目录。运行命令时请先 `cd` 到该目录（或把仓库根加入 `PYTHONPATH`）。
+> envcad 的 Python 包（`envcad/`）与 `pyproject.toml` 位于**仓库根目录**（即本文件所在 `skills/envcad/` 的上一级）。运行安装与出图命令前，请先 `cd` 到**仓库根目录**（或把仓库根加入 `PYTHONPATH`），否则 `pip install -e .` 与 `from envcad...` 导入会失败。
 
 ## Usage — CLI
 
