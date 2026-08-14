@@ -1,0 +1,9 @@
+# envcad 核心依赖（生成 DXF 必需）
+ezdxf>=1.3
+
+# 可选：COM 桥接推送 AutoCAD / ZWCAD（仅 Windows）
+# pywin32>=305
+
+# 可选：文档自动化层（DOCX 说明书 / XLSX 清单）
+# openpyxl
+# python-docx

@@ -27,9 +27,9 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/你的用户名/凹凸CAD小助手"
-Repository = "https://github.com/你的用户名/凹凸CAD小助手"
-Documentation = "https://github.com/你的用户名/凹凸CAD小助手/blob/main/USAGE.md"
+Homepage = "https://github.com/akaDJL/-cad-"
+Repository = "https://github.com/akaDJL/-cad-"
+Documentation = "https://github.com/akaDJL/-cad-/blob/main/USAGE.md"
 
 [project.optional-dependencies]
 cad = ["pywin32"]            # multiCAD-mcp COM 桥接（AutoCAD/ZWCAD）
