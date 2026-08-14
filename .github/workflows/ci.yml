@@ -17,7 +17,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install (core + doc; pywin32/COM 桥接仅 Windows)
-        run: pip install -e ".[doc]"
+      - name: Install (core + doc + pytest; pywin32/COM 桥接仅 Windows)
+        run: |
+          pip install -e ".[doc]"
+          pip install pytest
       - name: Run tests
         run: pytest -q
