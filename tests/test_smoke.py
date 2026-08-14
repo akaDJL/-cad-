@@ -3,6 +3,9 @@ import os, sys, ezdxf, pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+# 确保相对路径 out/ 存在（CI 全新克隆时该目录被 gitignore 且不存在）
+os.makedirs("out", exist_ok=True)
+
 
 def test_import_core():
     """核心模块导入"""
