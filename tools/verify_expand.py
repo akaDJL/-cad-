@@ -6,7 +6,7 @@ from envcad.knowledge import codes, env_data, mech_data, plumb_data
 from envcad.knowledge import hvac_data, elec_data, materials, formulas
 
 print('=' * 60)
-print('  凹凸CAD小助手 v1.5 知识库扩充验证')
+print('  CAD助手 v1.5 知识库扩充验证')
 print('=' * 60)
 print()
 print(f'  codes.py     : 规范 {len(codes.GB_CODES)} 本')

@@ -1409,7 +1409,7 @@ def leachate_flow(I: float, A: float, C: float = 0.5) -> float:
 
 def main():
     print("=" * 60)
-    print("  凹凸CAD小助手 v1.5 知识库扩充")
+    print("  CAD助手 v1.5 知识库扩充")
     print("=" * 60)
 
     expand_codes()

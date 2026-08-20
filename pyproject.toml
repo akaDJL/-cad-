@@ -9,7 +9,7 @@ description = "跨行业国标工程制图插件（集成 text-to-cad / multiCAD
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "凹凸cad小助手（二集）" }]
+authors = [{ name = "CAD助手" }]
 dependencies = [
     "ezdxf>=1.3",
 ]
@@ -27,9 +27,9 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/akaDJL/-cad-"
-Repository = "https://github.com/akaDJL/-cad-"
-Documentation = "https://github.com/akaDJL/-cad-/blob/main/USAGE.md"
+Homepage = "https://gitee.com/Funkidragon99/cad1.0"
+Repository = "https://gitee.com/Funkidragon99/cad1.0"
+Documentation = "https://gitee.com/Funkidragon99/cad1.0/blob/main/USAGE.md"
 
 [project.optional-dependencies]
 cad = ["pywin32"]            # multiCAD-mcp COM 桥接（AutoCAD/ZWCAD）

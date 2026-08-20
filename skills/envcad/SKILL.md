@@ -3,11 +3,11 @@ name: envcad
 description: "跨行业国标工程制图 CAD 技能：基于 ezdxf 生成符合 GB 国标（GB/T 17450、GB/T 50001、GB/T 1182、GB/T 324、GB 50010 等）的 DXF 工程图，覆盖建筑/土木/结构/桥梁/基础/机械/环保(水处理·大气·固废·环评)/电气/给排水/暖通/液压/P&ID/农业食品/电子半导体/能源化工/测绘GIS 等 16+ 行业，含 GD&T 形位公差、焊接符号、表面粗糙度、BOM、剖面、钢筋、图纸模板、修订标记等标准标注，并可通过 COM 桥接推送 AutoCAD/ZWCAD。当用户要求生成 CAD 图纸、画工程图、出 DXF、标注形位公差/焊接/粗糙度、材料明细表、污水处理/沉淀池/管网平剖面图、液压原理图、电气控制图、给排水/暖通图、P&ID 流程图，或推送到 AutoCAD 时使用。Use when the user asks to generate CAD drawings, DXF files, engineering blueprints, piping/sedimentation tank/WWTP drawings, GD&T/weld/roughness symbols, BOM, HVAC/electrical/plumbing/P&ID diagrams, or push to AutoCAD."
 version: "1.5"
 license: MIT
-homepage: https://github.com/akaDJL/-cad-
-author: 凹凸cad小助手（二集）
+homepage: https://gitee.com/Funkidragon99/cad1.0
+author: CAD助手
 ---
 
-# envcad — 凹凸cad小助手（二集集成・v1.5）
+# envcad — CAD助手（二集集成・v1.5）
 
 ## Overview
 

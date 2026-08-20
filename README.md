@@ -1,6 +1,6 @@
 # envcad — 跨行业国标工程制图集成插件
 
-> 凹凸CAD小助手（二集）· 国标工程制图插件 · [示例 DXF](examples/) · [使用手册](USAGE.md)
+> CAD助手· 国标工程制图插件 · [示例 DXF](examples/) · [使用手册](USAGE.md)
 >
 > [![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 > [![python](https://img.shields.io/badge/python-%3E%3D3.10-blue.svg)](https://www.python.org)

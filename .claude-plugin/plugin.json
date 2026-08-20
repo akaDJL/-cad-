@@ -1,13 +1,13 @@
 {
   "name": "envcad",
   "version": "1.5.0",
-  "description": "凹凸cad小助手（二集）envcad v1.5：基于 ezdxf 的跨行业国标工程制图插件，生成符合 GB 国标的 DXF 工程图，覆盖建筑/土木/结构/机械/环保/电气/给排水/暖通/液压/P&ID 等 16+ 行业，含 GD&T、焊接符号、粗糙度、BOM、钢筋、图纸模板、修订标记，并可 COM 桥接推送 AutoCAD/ZWCAD。",
+  "description": "CAD助手envcad v1.5：基于 ezdxf 的跨行业国标工程制图插件，生成符合 GB 国标的 DXF 工程图，覆盖建筑/土木/结构/机械/环保/电气/给排水/暖通/液压/P&ID 等 16+ 行业，含 GD&T、焊接符号、粗糙度、BOM、钢筋、图纸模板、修订标记，并可 COM 桥接推送 AutoCAD/ZWCAD。",
   "author": {
-    "name": "凹凸cad小助手（二集）",
-    "url": "https://github.com/akaDJL/-cad-"
+    "name": "CAD助手",
+    "url": "https://gitee.com/Funkidragon99/cad1.0"
   },
-  "homepage": "https://github.com/akaDJL/-cad-",
-  "repository": "https://github.com/akaDJL/-cad-",
+  "homepage": "https://gitee.com/Funkidragon99/cad1.0",
+  "repository": "https://gitee.com/Funkidragon99/cad1.0",
   "license": "MIT",
   "keywords": [
     "cad",
@@ -16,7 +16,7 @@
     "国标工程图",
     "autocad",
     "envcad",
-    "凹凸cad小助手"
+    "CAD助手"
   ],
   "skills": ["./skills/envcad"]
 }
