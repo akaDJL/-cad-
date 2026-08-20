@@ -7,3 +7,6 @@ ezdxf>=1.3
 # 可选：文档自动化层（DOCX 说明书 / XLSX 清单）
 # openpyxl
 # python-docx
+
+# 可选：STEP 3D 输出（engine/step_bridge）
+# build123d>=0.8

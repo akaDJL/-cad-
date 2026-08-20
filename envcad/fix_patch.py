@@ -130,6 +130,24 @@ class SmartTextPlacer:
         self.frame_bbox = frame_bbox  # (x0, y0, x1, y1) 图框内框范围
         self.scale = scale
         self.margin = 5.0 * scale  # 距图框边安全距离
+        self._scanned_count = 0  # 已登记到 tracker 的 modelspace 实体数（增量同步）
+    
+    def _sync_geometry(self, msp) -> None:
+        """把 modelspace 里新增的几何实体自动登记到碰撞追踪器。
+
+        解决「大量 draw_xxx 模块的 tracker 参数未实际调用」导致的几何不登记
+        问题：无论几何来自哪个模块，放文字前统一增量扫描登记，使文字能
+        避让全库几何。TEXT 等不支持类型会被 register_entity 静默跳过。
+        """
+        if self.tracker is None:
+            return
+        try:
+            entities = list(msp)
+            for e in entities[self._scanned_count:]:
+                self.tracker.register_entity(e, margin=0)
+            self._scanned_count = len(entities)
+        except Exception:
+            pass
     
     def _within_frame(self, x: float, y: float, w: float, h: float) -> bool:
         """检查位置是否在图框内。"""
@@ -177,6 +195,8 @@ class SmartTextPlacer:
         if not content:
             return None
         
+        # 先增量登记 modelspace 里的几何（覆盖所有模块画的实体）
+        self._sync_geometry(msp)
         px, py = point
         
         # 估算文字尺寸

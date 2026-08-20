@@ -67,13 +67,13 @@ python -c "import sys; sys.path.insert(0,'.'); sys.argv=['envcad','all','--cad',
 
 ```python
 from envcad.engine.dxf_base import new_drawing, save_dxf
-from envcad.standards.frame import add_a3_frame, add_title_block
+from envcad.standards.frame import draw_frame, FrameInfo
 
 doc, dim_name = new_drawing(scale=100)
 msp = doc.modelspace()
 # ... 用 envcad.standards.* 下的 draw_xxx() 添加几何/标注 ...
-add_a3_frame(doc, scale=100)
-add_title_block(doc, name="图名", drawing_no="编号", scale="1:100")
+draw_frame(doc, scale=100,
+           info=FrameInfo(title="图名", drawing_no="编号", scale_str="1:100"))
 save_dxf(doc, r"path/to/output.dxf")
 ```
 

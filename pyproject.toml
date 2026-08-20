@@ -34,7 +34,8 @@ Documentation = "https://github.com/akaDJL/-cad-/blob/main/USAGE.md"
 [project.optional-dependencies]
 cad = ["pywin32"]            # multiCAD-mcp COM 桥接（AutoCAD/ZWCAD）
 doc = ["openpyxl", "python-docx"]   # 文档自动化层（DOCX 说明书 / XLSX 清单）
-all = ["pywin32", "openpyxl", "python-docx"]
+step = ["build123d>=0.8"]    # STEP 3D 输出（engine/step_bridge）
+all = ["pywin32", "openpyxl", "python-docx", "build123d>=0.8"]
 
 [project.scripts]
 envcad = "envcad.cli:main"
