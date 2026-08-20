@@ -51,6 +51,7 @@ def draw_spur_gear(msp, origin, m=5.0, z=20, b=25.0,
                    layer="粗实线", tracker=None):
     """直齿圆柱齿轮简化画法（侧视图：分度圆+齿顶圆+齿根圆+键槽）。"""
     s = scale
+    before = len(msp)
     ox, oy = _r(*origin)
     d = m * z
     da = d + 2 * m
@@ -83,6 +84,7 @@ def draw_spur_gear(msp, origin, m=5.0, z=20, b=25.0,
                         align=TextEntityAlignment.MIDDLE_CENTER)
     _add_params_text(msp, params or {"m": str(m), "z": str(z)},
                      ox, oy + 7 * s, s)
+    _track_new_entities(tracker, msp, before)
     return (cx + ra + 5 * s, cy - ra - 10 * s)
 
 
@@ -91,6 +93,7 @@ def draw_helical_gear(msp, origin, m=5.0, z=20, beta=15.0,
                       layer="粗实线", tracker=None):
     """斜齿圆柱齿轮简化画法（侧视图+三条螺旋角示意线）。beta=螺旋角(°)。"""
     s = scale
+    before = len(msp)
     ox, oy = _r(*origin)
     d = m * z; da = d + 2 * m
     if params: da = params.get("da", da); d = params.get("d", d)
@@ -114,6 +117,7 @@ def draw_helical_gear(msp, origin, m=5.0, z=20, beta=15.0,
             "layer": "文字-标题", "height": 3 * s, "style": "HZ"})
         t.set_placement((cx, cy - ra - 4 * s),
                         align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (cx + ra + 5 * s, cy - ra - 8 * s)
 
 
@@ -122,6 +126,7 @@ def draw_bevel_gear_pair(msp, origin, m=5.0, z1=20, z2=30,
                          layer="粗实线", tracker=None):
     """锥齿轮副简化画法（正交轴）。"""
     s = scale
+    before = len(msp)
     ox, oy = _r(*origin)
     r1 = m * z1 / 2 * s; r2 = m * z2 / 2 * s
     cx1, cy1 = ox, oy; cx2, cy2 = ox + r1, oy + r1
@@ -140,6 +145,7 @@ def draw_bevel_gear_pair(msp, origin, m=5.0, z1=20, z2=30,
             "layer": "文字-标题", "height": 3 * s, "style": "HZ"})
         t.set_placement((cx2, cy2 - r2 - 6 * s),
                         align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (cx2 + r2 + 5 * s, cy2 - r2 - 10 * s)
 
 
@@ -148,6 +154,7 @@ def draw_worm_gear_pair(msp, origin, m=4.0, z1=2, z2=30, q=10.0,
                         layer="粗实线", tracker=None):
     """蜗轮蜗杆副简化画法。q=直径系数。"""
     s = scale
+    before = len(msp)
     ox, oy = _r(*origin)
     dw = m * q * s; dg = m * z2 * s; rw, rg = dw / 2, dg / 2
     cx_w, cy_w = ox + rg + rw + 5 * s, oy
@@ -168,6 +175,7 @@ def draw_worm_gear_pair(msp, origin, m=4.0, z1=2, z2=30, q=10.0,
             "layer": "文字-标题", "height": 3 * s, "style": "HZ"})
         t.set_placement((cx_g, cy_g - rg - 5 * s),
                         align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (cx_w + rw + 5 * s, cy_g - rg - 10 * s)
 
 
@@ -181,6 +189,7 @@ def draw_stepped_shaft(msp, origin, diameters=None, lengths=None,
     """阶梯轴（多段圆柱 + 倒角/退刀槽 + 中心孔 + 键槽）。
     diameters=[40,55,40,30](mm), lengths=[60,35,45,25](mm)。"""
     s = scale
+    before = len(msp)
     ox, oy = _r(*origin)
     if diameters is None: diameters = [40, 55, 40, 30]
     if lengths is None: lengths = [60, 35, 45, 25]
@@ -215,6 +224,7 @@ def draw_stepped_shaft(msp, origin, diameters=None, lengths=None,
             "layer": "文字-标题", "height": 3 * s, "style": "HZ"})
         t.set_placement((ox + (x - ox) / 2, y_mid - half_w_max - 5 * s),
                         align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (x + 5 * s, y_mid - half_w_max - 12 * s)
 
 
@@ -223,6 +233,7 @@ def draw_spline_shaft(msp, origin, d=40.0, z=6, L=80.0,
                       layer="粗实线", tracker=None):
     """花键轴（矩形花键简化画法：外径+内径+截面齿形）。"""
     s = scale
+    before = len(msp)
     ox, oy = _r(*origin)
     R = d / 2 * s; r_inner = R * 0.85; length = L * s
 
@@ -252,6 +263,7 @@ def draw_spline_shaft(msp, origin, d=40.0, z=6, L=80.0,
             "layer": "文字-标题", "height": 3 * s, "style": "HZ"})
         t.set_placement((cx_s, oy - R - 5 * s),
                         align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (cx_s + R + 3 * s, oy - R - 10 * s)
 
 
@@ -265,6 +277,7 @@ def draw_rolling_bearing(msp, origin, b_type="deep_groove",
                          layer="粗实线", tracker=None):
     """滚动轴承简化画法（深沟球/角接触/圆锥滚子）。d=内径 D=外径 B=宽度(mm)。"""
     s = scale
+    before = len(msp)
     ox, oy = _r(*origin)
     R_out = D / 2 * s; R_in = d / 2 * s; w = B * s
     cx, cy = ox + R_out + 5 * s, oy
@@ -290,6 +303,7 @@ def draw_rolling_bearing(msp, origin, b_type="deep_groove",
             "layer": "文字-标题", "height": 3 * s, "style": "HZ"})
         t.set_placement((cx, cy - R_out - 5 * s),
                         align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (cx + w / 2 + 3 * s, cy - R_out - 10 * s)
 
 
@@ -302,6 +316,7 @@ def draw_key(msp, origin, k_type="A", b=10.0, h=8.0, L=40.0,
              layer="粗实线", tracker=None):
     """键（平键/半圆键）简图。k_type: A(圆头)/B(方头)/woodruff(半圆)。"""
     s = scale
+    before = len(msp)
     ox, oy = _r(*origin)
     bw, bh, bl = b * s, h * s, L * s
 
@@ -327,6 +342,7 @@ def draw_key(msp, origin, k_type="A", b=10.0, h=8.0, L=40.0,
             "layer": "文字-标题", "height": 2.5 * s, "style": "HZ"})
         t.set_placement((ox + bl / 2, oy - bh - 3 * s),
                         align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (ox + bl + 3 * s, oy - bh - 5 * s)
 
 
@@ -335,6 +351,7 @@ def draw_thread(msp, origin, t_type="external", d=20.0, L=40.0,
                 layer="粗实线", tracker=None):
     """螺纹简化画法（GB/T 4459.1）。external(外螺纹)/internal(内螺纹)。"""
     s = scale
+    before = len(msp)
     ox, oy = _r(*origin)
     r = d / 2 * s; r_inner = (d - 1.0825 * pitch) / 2 * s; length = L * s
 
@@ -363,6 +380,7 @@ def draw_thread(msp, origin, t_type="external", d=20.0, L=40.0,
             "layer": "文字-标题", "height": 2.5 * s, "style": "HZ"})
         t.set_placement((ox + length / 2, oy - r - 4 * s),
                         align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (ox + length + 5 * s, oy - r - 8 * s)
 
 
@@ -371,6 +389,7 @@ def draw_bolt_connection(msp, origin, d=12.0, L=50.0, t1=15.0, t2=15.0,
                          layer="粗实线", tracker=None):
     """螺栓连接装配图简化画法（GB/T 4459.1）。"""
     s = scale
+    before = len(msp)
     ox, oy = _r(*origin)
     r = d / 2 * s; r_head = r * 1.6; h_head = d * 0.7 * s
     h_nut = d * 0.8 * s; r_nut = r_head
@@ -409,6 +428,7 @@ def draw_bolt_connection(msp, origin, d=12.0, L=50.0, t1=15.0, t2=15.0,
         t = msp.add_text(label, dxfattribs={
             "layer": "文字-标题", "height": 3 * s, "style": "HZ"})
         t.set_placement((ox, oy - 5 * s), align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (ox + r_nut + 5 * s, oy - 8 * s)
 
 
@@ -422,6 +442,7 @@ def draw_compression_spring(msp, origin, d=20.0, D=60.0, n=6,
                             layer="粗实线", tracker=None):
     """压缩弹簧（特征画法）。d=簧丝直径 D=中径 n=圈数 free_length=自由高度(mm)。"""
     s = scale
+    before = len(msp)
     ox, oy = _r(*origin)
     half_D = D / 2 * s; half_d = d / 2 * s; h = free_length * s
 
@@ -446,6 +467,7 @@ def draw_compression_spring(msp, origin, d=20.0, D=60.0, n=6,
             "layer": "文字-标题", "height": 3 * s, "style": "HZ"})
         t.set_placement((ox + h / 2, oy - half_D - 5 * s),
                         align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (ox + h + 5 * s, oy - half_D - 10 * s)
 
 
@@ -455,6 +477,7 @@ def draw_extension_spring(msp, origin, d=15.0, D=40.0, n=10,
                           layer="粗实线", tracker=None):
     """拉伸弹簧（特征画法：密圈+两端拉钩）。"""
     s = scale
+    before = len(msp)
     ox, oy = _r(*origin)
     half_D = D / 2 * s; half_d = d / 2 * s; h = free_length * s
     hook_h = half_D * 0.7
@@ -482,6 +505,7 @@ def draw_extension_spring(msp, origin, d=15.0, D=40.0, n=10,
             "layer": "文字-标题", "height": 3 * s, "style": "HZ"})
         t.set_placement((ox + h / 2, oy - half_D - 8 * s),
                         align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (ox + h + 5 * s, oy - half_D - 12 * s)
 
 
@@ -494,6 +518,7 @@ def draw_circlip(msp, origin, d=30.0, c_type="external",
                  layer="粗实线", tracker=None):
     """弹性挡圈简化画法。external(轴用)/internal(孔用)。"""
     s = scale
+    before = len(msp)
     ox, oy = _r(*origin)
     R = d / 2 * s; r_inner = R * 0.85
     cx, cy = ox + R + 2 * s, oy
@@ -520,6 +545,7 @@ def draw_circlip(msp, origin, d=30.0, c_type="external",
             "layer": "文字-标题", "height": 2.5 * s, "style": "HZ"})
         t.set_placement((cx, cy - R - 4 * s),
                         align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (cx + R + 3 * s, cy - R - 6 * s)
 
 
@@ -528,6 +554,7 @@ def draw_oil_seal(msp, origin, d=40.0, D=62.0, B=8.0,
                   layer="粗实线", tracker=None):
     """骨架油封简化画法（半剖）。d=内径 D=外径 B=宽度(mm)。"""
     s = scale
+    before = len(msp)
     ox, oy = _r(*origin)
     R_out = D / 2 * s; R_in = d / 2 * s; w = B * s
     cx, cy = ox + R_out + 3 * s, oy
@@ -553,6 +580,7 @@ def draw_oil_seal(msp, origin, d=40.0, D=62.0, B=8.0,
             "layer": "文字-标题", "height": 2.5 * s, "style": "HZ"})
         t.set_placement((cx, cy - R_out - 4 * s),
                         align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (cx + w / 2 + 3 * s, cy - R_out - 6 * s)
 
 
@@ -561,6 +589,7 @@ def draw_center_hole(msp, origin, h_type="A", d=4.0, D_ref=10.0,
                      layer="粗实线", tracker=None):
     """中心孔简化画法（GB/T 145）。A(不带护锥)/B(带护锥)/C(带螺纹)/R(弧形)。"""
     s = scale
+    before = len(msp)
     ox, oy = _r(*origin)
     half_D = D_ref / 2 * s; half_d = d / 2 * s; depth = D_ref * 1.2 * s
 
@@ -586,6 +615,7 @@ def draw_center_hole(msp, origin, h_type="A", d=4.0, D_ref=10.0,
         t.set_placement((ox - depth / 2, oy - half_D - 4 * s),
                         align=TextEntityAlignment.MIDDLE_CENTER)
     cone_w = D_ref * 1.8 * s * 0.5 if h_type == "B" else 0
+    _track_new_entities(tracker, msp, before)
     return (ox + cone_w + 3 * s, oy - half_D - 6 * s)
 
 
@@ -598,6 +628,7 @@ def draw_cam_disk(msp, origin, r_base=30.0, r_lobe=45.0, n_lobes=1,
                   layer="粗实线", tracker=None):
     """盘形凸轮简化画法（基圆+凸起段，n_lobes个凸轮面）。"""
     s=scale;ox,oy=_r(*origin)
+    before = len(msp)
     rb,rh,lh=r_base*s,r_lobe*s,3*s
     cx,cy=ox+rh+5*s,oy
     _center_line(msp,cx,cy,rh*2+5*s,"h",s)
@@ -615,6 +646,7 @@ def draw_cam_disk(msp, origin, r_base=30.0, r_lobe=45.0, n_lobes=1,
     if label:
         t=msp.add_text(label,dxfattribs={"layer":"文字-标题","height":2.8*s,"style":"HZ"})
         t.set_placement((cx,cy-rh-4*s),align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (ox+rh*2+10*s,oy)
 
 
@@ -622,6 +654,7 @@ def draw_chain_sprocket(msp, origin, z=16, p=12.7, scale=100.0,
                         label="", params=None, layer="粗实线", tracker=None):
     """链轮简化画法（分度圆+齿顶圆+齿根圆）。p=节距mm。"""
     s=scale;ox,oy=_r(*origin)
+    before = len(msp)
     import math
     d=p/math.sin(math.pi/z)*s;da=d+0.8*p*s;df=d-1.2*p*s
     cx,cy=ox+da/2+5*s,oy
@@ -636,6 +669,7 @@ def draw_chain_sprocket(msp, origin, z=16, p=12.7, scale=100.0,
     if label:
         t=msp.add_text(label,dxfattribs={"layer":"文字-标题","height":2.5*s,"style":"HZ"})
         t.set_placement((cx,cy-da/2-4*s),align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (ox+da+10*s,oy)
 
 
@@ -644,6 +678,7 @@ def draw_coupling(msp, origin, d=40.0, L=100.0, c_type="rigid",
                   layer="粗实线", tracker=None):
     """联轴器简化画法（法兰式/弹性销式）。c_type: rigid/flexible。"""
     s=scale;ox,oy=_r(*origin)
+    before = len(msp)
     ds,ls=d*s,L*s
     r,hl=ds/2,ls/2
     cx,cy=ox+hl+5*s,oy
@@ -662,4 +697,24 @@ def draw_coupling(msp, origin, d=40.0, L=100.0, c_type="rigid",
     if label:
         t=msp.add_text(label,dxfattribs={"layer":"文字-标题","height":2.5*s,"style":"HZ"})
         t.set_placement((cx,cy-r-4*s),align=TextEntityAlignment.MIDDLE_CENTER)
+    _track_new_entities(tracker, msp, before)
     return (cx+hl+5*s,oy+r+5*s)
+
+
+# ═══════════════════════════════════════════
+# 碰撞登记辅助（v1.5.1 修复：tracker 参数之前未实际使用）
+# ═══════════════════════════════════════════
+
+def _track_new_entities(tracker, msp, before):
+    """将本函数本次新增的实体登记到碰撞追踪器，供 SmartTextPlacer 避让。
+
+    before 为进入本函数时 modelspace 的实体数；遍历 [before:] 区间的
+    新实体，按类型自动登记包围盒（TEXT 等不支持类型会被静默跳过）。
+    """
+    if tracker is None:
+        return
+    try:
+        for e in list(msp)[before:]:
+            tracker.register_entity(e, margin=0)
+    except Exception:
+        pass
