@@ -175,16 +175,19 @@ def push_to_cad(
 
     pythoncom.CoInitialize()
 
-    # Dispatch with timeout protection
+    # 主线程 GetActiveObject 优先复用已运行实例，否则主线程 Dispatch。
+    # 不能用 _dispatch_with_timeout（后台线程 Dispatch 会跨线程访问 COM
+    # 对象，导致 app.Documents 访问失败）。
     try:
-        app = _dispatch_with_timeout(progid, timeout)
-    except _DispatchTimeout as e:
-        return False, str(e)
-    except Exception as e:
-        err = str(e)
-        if "CoInitialize" in err.lower():
-            return False, f"COM 初始化失败: {err}（请确认 {cad.upper()} 已正确安装）"
-        return False, f"启动 {cad.upper()} 失败: {err} | {CAD_INSTALL_GUIDE.get(cad.lower(), '')}"
+        app = win32com.client.GetActiveObject(progid)
+    except Exception:
+        try:
+            app = win32com.client.Dispatch(progid)
+        except Exception as e:
+            err = str(e)
+            if "CoInitialize" in err.lower():
+                return False, f"COM 初始化失败: {err}（请确认 {cad.upper()} 已正确安装）"
+            return False, f"启动 {cad.upper()} 失败: {err} | {CAD_INSTALL_GUIDE.get(cad.lower(), '')}"
 
     # Open DXF
     try:
