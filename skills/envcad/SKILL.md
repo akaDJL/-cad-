@@ -195,6 +195,21 @@ This checks every DXF for required annotations, layers, and entity counts.
 # 支持: autocad, zwcad, gstarcad, bricscad
 ```
 
+### DXF → DWG 转换（v1.5.1）
+
+插件本体通过 `multicad_bridge.dxf_to_dwg()` 输出 DWG（借助本机已装 CAD 的 COM，
+无需额外依赖；纯 Python 无法直写 DWG 专有格式）：
+
+```python
+from envcad.engine.multicad_bridge import dxf_to_dwg, dxf_dir_to_dwg
+
+# 单文件：DXF → DWG（默认 AutoCAD 2018 格式）
+ok, path_or_err = dxf_to_dwg("output.dxf", "output.dwg", cad="autocad", version="2018")
+
+# 批量：目录下所有 .dxf → .dwg
+ok, fail = dxf_dir_to_dwg("./out", cad="autocad", version="2018")
+```
+
 ## The Five Acceptance Tests
 
 | # | Test | What it validates | Output files |

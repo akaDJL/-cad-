@@ -243,3 +243,122 @@ def list_layers_in_cad(cad: str = "autocad") -> list[str]:
         return [lt.Name for lt in doc.Layers]
     except Exception as _e:
         return []
+
+
+# ── DWG 输出（v1.5.1 新增）：DXF → DWG 转换 ─────────────
+
+# DWG 版本常量（AutoCAD/ZWCAD COM SaveAs 第二参数）
+DWG_VERSIONS = {
+    "2018": 64, "2013": 60, "2010": 48, "2007": 36,
+    "2004": 24, "2000": 12, "r14": 8,
+}
+
+
+def dxf_to_dwg(
+    dxf_path: str,
+    dwg_path: str | None = None,
+    cad: str = "autocad",
+    version: str = "2018",
+    timeout: float = _DISPATCH_TIMEOUT,
+) -> tuple[bool, str]:
+    """把 DXF 转换为 DWG（通过 CAD COM 打开后 SaveAs）。返回 (success, 路径或错误)。
+
+    Args:
+        dxf_path: 源 DXF 绝对路径
+        dwg_path: 目标 DWG 路径（默认同目录同名 .dwg）
+        cad: autocad / zwcad / gstarcad / bricscad
+        version: DWG 版本（"2018"/"2013"/"2010"/"2007"/"2004"/"2000"/"r14"）
+        timeout: COM Dispatch 超时秒数
+    """
+    if not _try_import_win32():
+        return False, _win32_help()
+
+    dxf_path = os.path.abspath(dxf_path)
+    if not os.path.exists(dxf_path):
+        return False, f"DXF 文件不存在: {dxf_path}"
+
+    if dwg_path is None:
+        dwg_path = os.path.splitext(dxf_path)[0] + ".dwg"
+    dwg_path = os.path.abspath(dwg_path)
+    os.makedirs(os.path.dirname(dwg_path), exist_ok=True)
+
+    ver = DWG_VERSIONS.get(str(version).lower(), 64)
+    progid = CAD_PROGIDS.get(cad.lower())
+    if not progid:
+        return False, f"不支持的 CAD: {cad}（支持: {', '.join(CAD_PROGIDS)}）"
+
+    import win32com.client
+    import pythoncom
+    import time
+
+    pythoncom.CoInitialize()
+
+    # 优先复用已运行的 CAD 实例，否则主线程 Dispatch。
+    # 注意：不能用 _dispatch_with_timeout（后台线程 Dispatch 会跨线程访问
+    # COM 对象，导致 app.Documents 访问失败）。
+    try:
+        app = win32com.client.GetActiveObject(progid)
+    except Exception:
+        try:
+            app = win32com.client.Dispatch(progid)
+        except Exception as e:
+            return False, f"启动 {cad.upper()} 失败: {e} | {CAD_INSTALL_GUIDE.get(cad.lower(), '')}"
+
+    try:
+        # 若目标已存在，先尝试删除（避免 SaveAs 覆盖冲突）
+        if os.path.exists(dwg_path):
+            try:
+                os.remove(dwg_path)
+            except Exception:
+                pass
+
+        # 等待 CAD 就绪（Dispatch 后 Documents 集合可能尚未初始化），带重试
+        doc = None
+        last_err = None
+        for _ in range(10):
+            try:
+                doc = app.Documents.Open(dxf_path)
+                break
+            except Exception as e:
+                last_err = e
+                time.sleep(2.0)
+        if doc is None:
+            return False, f"打开 DXF 失败: {last_err}"
+
+        try:
+            doc.SaveAs(dwg_path, ver)
+        except Exception:
+            # 某些 CAD 版本 SaveAs 签名不同，退化为单参数
+            doc.SaveAs(dwg_path)
+        try:
+            doc.Close(False)
+        except Exception:
+            pass
+
+        if os.path.exists(dwg_path):
+            return True, dwg_path
+        return False, "DWG 文件未生成"
+    except Exception as e:
+        return False, f"DXF→DWG 转换失败: {e}"
+
+
+def dxf_dir_to_dwg(
+    directory: str,
+    cad: str = "autocad",
+    version: str = "2018",
+) -> tuple[int, int]:
+    """批量转换：把目录下所有 .dxf 转为 .dwg。返回 (成功数, 失败数)。"""
+    directory = os.path.abspath(directory)
+    dxf_files = [f for f in os.listdir(directory) if f.lower().endswith(".dxf")]
+    ok, fail = 0, 0
+    for fn in dxf_files:
+        src = os.path.join(directory, fn)
+        dst = os.path.splitext(src)[0] + ".dwg"
+        success, msg = dxf_to_dwg(src, dst, cad=cad, version=version)
+        if success:
+            ok += 1
+            print(f"[OK] {fn} → {os.path.basename(msg)}")
+        else:
+            fail += 1
+            print(f"[FAIL] {fn}: {msg}")
+    return ok, fail
