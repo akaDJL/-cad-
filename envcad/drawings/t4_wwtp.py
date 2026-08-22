@@ -16,7 +16,7 @@ from __future__ import annotations
 import os
 
 from ..engine.dxf_base import new_drawing, save_dxf, BBoxTracker
-from ..standards.frame import FrameInfo, draw_frame
+from ..standards.frame import FrameInfo, draw_frame, save_dxf_autofit
 from ..standards.annotate import _t, draw_flow_arrow, draw_elevation, draw_pipe_diameter
 from ..standards.legend import draw_legend
 from ..components.pool import (RectPoolParams, draw_rect_pool_plan,
@@ -50,7 +50,8 @@ def _frame(doc, scale, title, no, tracker=None):
     info = FrameInfo(title=title, drawing_no=no, scale_str=f"1:{int(scale)}",
                      project=INFO.project, unit=INFO.unit,
                      designer=INFO.designer, date=INFO.date)
-    return draw_frame(doc, scale, info, tracker=tracker)
+    x0, y0, x1, y1 = draw_frame(doc, scale, info, tracker=tracker)
+    return x0, y0, x1, y1, info
 
 
 def gen_t4(out_dir: str, scale: float = 100.0) -> list:
@@ -69,7 +70,7 @@ def gen_t4(out_dir: str, scale: float = 100.0) -> list:
 def _sheet1_general(out_dir, scale):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "总平面布置图", "T4-01", tracker=tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "总平面布置图", "T4-01", tracker=tracker)
     s = scale
 
     # 构筑物布局（增大间距）
@@ -127,7 +128,7 @@ def _sheet1_general(out_dir, scale):
                     width=TECH_NOTE_W,
                     tracker=tracker)
 
-    path = save_dxf(doc, os.path.join(out_dir, "T4-01_总平面布置图.dxf"))
+    path = save_dxf_autofit(doc, os.path.join(out_dir, "T4-01_总平面布置图.dxf"), scale, info, tracker)
     return path
 
 
@@ -136,7 +137,7 @@ def _sheet1_general(out_dir, scale):
 def _sheet2_adjustment(out_dir, scale):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "调节池平剖面图", "T4-02", tracker=tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "调节池平剖面图", "T4-02", tracker=tracker)
     s = scale
 
     p = RectPoolParams(length=8000, width=5000, depth=4000, wall_thick=250,
@@ -170,7 +171,7 @@ def _sheet2_adjustment(out_dir, scale):
                     width=TECH_NOTE_W,
                     tracker=tracker)
 
-    return save_dxf(doc, os.path.join(out_dir, "T4-02_调节池平剖面图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "T4-02_调节池平剖面图.dxf"), scale, info, tracker)
 
 
 # ═══════════════ 图3：接触氧化池平剖面图 ═══════════════
@@ -178,7 +179,7 @@ def _sheet2_adjustment(out_dir, scale):
 def _sheet3_contact_oxidation(out_dir, scale):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "接触氧化池平剖面图", "T4-03", tracker=tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "接触氧化池平剖面图", "T4-03", tracker=tracker)
     s = scale
 
     p = RectPoolParams(length=6000, width=4000, depth=4000, wall_thick=250,
@@ -226,7 +227,7 @@ def _sheet3_contact_oxidation(out_dir, scale):
                     width=TECH_NOTE_W,
                     tracker=tracker)
 
-    return save_dxf(doc, os.path.join(out_dir, "T4-03_接触氧化池平剖面图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "T4-03_接触氧化池平剖面图.dxf"), scale, info, tracker)
 
 
 # ═══════════════ 图4：斜管沉淀池平剖面图 ═══════════════
@@ -234,7 +235,7 @@ def _sheet3_contact_oxidation(out_dir, scale):
 def _sheet4_settler(out_dir, scale):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "斜管沉淀池平剖面图", "T4-04", tracker=tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "斜管沉淀池平剖面图", "T4-04", tracker=tracker)
     s = scale
 
     # 圆形池平面（左半区）
@@ -266,7 +267,7 @@ def _sheet4_settler(out_dir, scale):
                     width=TECH_NOTE_W,
                     tracker=tracker)
 
-    return save_dxf(doc, os.path.join(out_dir, "T4-04_斜管沉淀池平剖面图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "T4-04_斜管沉淀池平剖面图.dxf"), scale, info, tracker)
 
 
 # ═══════════════ 图5：工艺管道平面图 ═══════════════
@@ -274,7 +275,7 @@ def _sheet4_settler(out_dir, scale):
 def _sheet5_piping(out_dir, scale):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "工艺管道平面图", "T4-05", tracker=tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "工艺管道平面图", "T4-05", tracker=tracker)
     s = scale
 
     # 主工艺管线 — 增大节点间距
@@ -368,7 +369,7 @@ def _sheet5_piping(out_dir, scale):
                     width=TECH_NOTE_W,
                     tracker=tracker)
 
-    return save_dxf(doc, os.path.join(out_dir, "T4-05_工艺管道平面图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "T4-05_工艺管道平面图.dxf"), scale, info, tracker)
 
 
 # ═══════════════ 图6：设备材料表 ═══════════════
@@ -376,7 +377,7 @@ def _sheet5_piping(out_dir, scale):
 def _sheet6_material(out_dir, scale):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "设备材料表", "T4-06", tracker=tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "设备材料表", "T4-06", tracker=tracker)
     s = scale
 
     rows = [
@@ -447,4 +448,4 @@ def _sheet6_material(out_dir, scale):
     _t(msp, "设备材料表", (x0 + (x1 - x0) / 2, y0 + 5000), 5 * s,
        align=TextEntityAlignment.MIDDLE_CENTER, layer="文字-标题", tracker=tracker)
 
-    return save_dxf(doc, os.path.join(out_dir, "T4-06_设备材料表.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "T4-06_设备材料表.dxf"), scale, info, tracker)

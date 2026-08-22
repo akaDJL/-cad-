@@ -107,11 +107,43 @@ def _run_domain_drawing(domain, func_name, params, out_dir, scale=100.0, cad=Non
     filename = kwargs.pop("_filename", f"{domain}_{func_name}.dxf")
     kwargs.setdefault("scale", scale)
 
+    # 国标图框：所有 domain 出图默认套上 A2 横式（或 batch 指定的 paper/orientation）
+    # 图框绘制后返回内框范围 (x0,y0,x1,y1)，domain 函数内容应画在框内。
+    from .standards.frame import draw_frame, FrameInfo, get_default_paper_size, get_default_orientation
+    _frame_info = FrameInfo(
+        title=f"{domain}.{func_name}",
+        drawing_no=f"ENV-{domain.upper()[:3]}-{func_name[:4].upper()}",
+        scale_str=f"1:{int(scale)}",
+        project=domain,
+        size=get_default_paper_size(),
+        orientation=get_default_orientation(),
+    )
+    _inner = draw_frame(doc, scale, _frame_info, tracker)
+    x0, y0, x1, y1 = _inner
+    # 内容基准点：内框内左上区域留 1% 边距，避免压到标题栏
+    _cx0, _cy0 = x0 + (x1 - x0) * 0.01, y0 + (y1 - y0) * 0.01
+    _content_origin = (_cx0, _cy0)
+
+    # 兼容三种函数签名约定：
+    #   1) (msp, origin, ...)      origin 为 (x,y) 元组 —— 多数模块
+    #   2) (msp, center, ...)      center 为 (x,y) 元组 —— 部分模块
+    #   3) (msp, x, y, ...)        x/y 为标量            —— 少数农业/电子/化工模块
+    import inspect
+    _sig = inspect.signature(draw_fn)
+    _params = list(_sig.parameters)
+    _second = _params[1] if len(_params) > 1 else ""
+    if _second in ("x", "y"):
+        # 标量约定：拆成两个位置参数
+        _pos = (_content_origin[0], _content_origin[1])
+    else:
+        # origin / center / 未知：统一传元组
+        _pos = (_content_origin,)
+
     try:
-        draw_fn(msp, (5000, 5000), **kwargs)
+        draw_fn(msp, *_pos, **kwargs)
     except TypeError:
         try:
-            draw_fn(msp, (5000, 5000), scale=scale, **{
+            draw_fn(msp, *_pos, scale=scale, **{
                 k: v for k, v in kwargs.items() if k != "scale"
             })
         except Exception as e:
@@ -120,11 +152,13 @@ def _run_domain_drawing(domain, func_name, params, out_dir, scale=100.0, cad=Non
             traceback.print_exc(file=sys.stderr)
             return None
 
-    # 保存
+    # 保存（自适应图幅：若内容超出默认幅面，自动重选 A0~A4 重画框）
+    from .standards.frame import refit_frame
+    _size, _orient = refit_frame(doc, scale, _frame_info, tracker)
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, filename)
     save_dxf(doc, path)
-    print(f"  生成: {path}")
+    print(f"  生成: {path}（图幅 {_size}-{('横' if _orient=='landscape' else '纵')}）")
 
     if cad:
         ok, msg = push_to_cad(path, cad=cad)
@@ -260,6 +294,17 @@ def _run_batch(config_path, out_dir, scale=100.0, cad=None):
 
         params["_filename"] = filename
 
+        # 每条任务可单独指定图幅/方向（覆盖命令行 --size/--orientation）
+        _paper = task.get("paper")
+        _orient = task.get("orientation")
+        if _paper or _orient:
+            from .standards.frame import (
+                set_default_paper_size, set_default_orientation)
+            if _paper:
+                set_default_paper_size(_paper)
+            if _orient:
+                set_default_orientation(_orient)
+
         print(f"\n[{i+1}/{len(tasks)}] {domain}.{func_name} -> {filename}")
         path = _run_domain_drawing(domain, func_name, params,
                                     out_dir, scale=task_scale, cad=cad)
@@ -313,6 +358,12 @@ def main(argv=None):
     batch_p.add_argument("--scale", type=float, default=100.0)
     batch_p.add_argument("--cad", default=None,
                           help="推送到CAD：autocad/zwcad/gstarcad/bricscad")
+    batch_p.add_argument("--size", default="A2",
+                         choices=["A0", "A1", "A2", "A3", "A4"],
+                         help="图幅尺寸（默认 A2）")
+    batch_p.add_argument("--orientation", default="landscape",
+                         choices=["landscape", "portrait"],
+                         help="图幅方向：横式/纵式（默认横式）")
 
     # 全部验收测试捷径
     all_p = sub.add_parser("all", help="运行全部验收测试（等同 test all）")
@@ -329,6 +380,12 @@ def main(argv=None):
         os.path.expanduser("~"), "Desktop", "envcad-output"))
     dom_p.add_argument("--scale", type=float, default=100.0)
     dom_p.add_argument("--cad", default=None)
+    dom_p.add_argument("--size", default="A2",
+                       choices=["A0", "A1", "A2", "A3", "A4"],
+                       help="图幅尺寸（默认 A2）")
+    dom_p.add_argument("--orientation", default="landscape",
+                       choices=["landscape", "portrait"],
+                       help="图幅方向：横式/纵式（默认横式）")
 
     # 列表命令
     sub.add_parser("list", help="列出所有可用领域和函数")
@@ -339,6 +396,12 @@ def main(argv=None):
     param_p.add_argument("--out", default=os.path.join(
         os.path.expanduser("~"), "Desktop", "envcad-output"))
     param_p.add_argument("--scale", type=float, default=100.0)
+    param_p.add_argument("--size", default="A2",
+                         choices=["A0", "A1", "A2", "A3", "A4"],
+                         help="图幅尺寸（默认 A2）")
+    param_p.add_argument("--orientation", default="landscape",
+                         choices=["landscape", "portrait"],
+                         help="图幅方向：横式/纵式（默认横式）")
     # 组件命令（一键标注 / 零件 / 线形 / 列表）
     annotate_p = sub.add_parser("annotate", help="一键标注（闭合轮廓智能分标+管径/坡度/流向+标高+图例+说明+批目录）")
     annotate_p.add_argument("--in", dest="input_dxf", default="",
@@ -367,7 +430,7 @@ def main(argv=None):
     ps_p = sub.add_parser("paperspace", help="创建图纸空间布局（A3视口+标题栏）")
     ps_p.add_argument("--out", default=os.path.join(
         os.path.expanduser("~"), "Desktop", "envcad-output"))
-    ps_p.add_argument("--paper", default="A3", choices=["A0","A1","A2","A3","A4"],
+    ps_p.add_argument("--paper", default="A2", choices=["A0","A1","A2","A3","A4"],
                         help="纸张尺寸")
     ps_p.add_argument("--project", default="", help="项目名")
     ps_p.add_argument("--no", default="", help="图号")
@@ -534,6 +597,12 @@ def main(argv=None):
     equip_p.add_argument("--project", default=None, help="工程名称")
     equip_p.add_argument("--cad", default=None,
                          help="推送到CAD: autocad/zwcad/gstarcad/bricscad")
+    equip_p.add_argument("--size", default="A2",
+                         choices=["A0", "A1", "A2", "A3", "A4"],
+                         help="图幅尺寸（默认 A2）")
+    equip_p.add_argument("--orientation", default="landscape",
+                         choices=["landscape", "portrait"],
+                         help="图幅方向：横式/纵式（默认横式）")
     # 袋式除尘器输入条件
     equip_p.add_argument("--air_flow", type=float, default=None,
                          help="[袋式/脱硫/活性炭]风量或废气量 m³/h（缺省按设备默认）")
@@ -572,10 +641,16 @@ def main(argv=None):
         return 0
 
     elif args.command == "batch":
+        from .standards.frame import set_default_paper_size, set_default_orientation
+        set_default_paper_size(args.size)
+        set_default_orientation(args.orientation)
         paths = _run_batch(args.config, args.out, args.scale, args.cad)
         return 0
 
     elif args.command == "domain":
+        from .standards.frame import set_default_paper_size, set_default_orientation
+        set_default_paper_size(args.size)
+        set_default_orientation(args.orientation)
         if args.function:
             path = _run_domain_drawing(
                 args.domain, args.function, {},
@@ -596,6 +671,9 @@ def main(argv=None):
         return 0
 
     elif args.command == "param":
+        from .standards.frame import set_default_paper_size, set_default_orientation
+        set_default_paper_size(args.size)
+        set_default_orientation(args.orientation)
         from .engine.parametric_bridge import parametric_cli
         path = parametric_cli(args.text, args.out, args.scale)
         if path:
@@ -618,6 +696,9 @@ def main(argv=None):
         _demo_design(args.out, args.kind, args)
         return 0
     elif args.command == "equip":
+        from .standards.frame import set_default_paper_size, set_default_orientation
+        set_default_paper_size(args.size)
+        set_default_orientation(args.orientation)
         return _run_equip(args)
 
     else:
@@ -811,6 +892,56 @@ def _annotate_one(input_path, args, is_demo=False):
     ], scale=s)
     print("  [标注] 已附加图例与施工说明")
 
+    # 8.5) 国标图框：以所有内容（含图例/说明）的外包络绘制图框与标题栏。
+    #      直接包住内容（不平移已有实体，避免 MTEXT/INSERT 平移失败导致错位），
+    #      标题栏固定在内容外包络右下角。
+    from .standards.frame import draw_frame_at, FrameInfo, PAPER_BASE
+    _bb_min_x, _bb_min_y, _bb_max_x, _bb_max_y = 0.0, 0.0, 0.0, 0.0
+    for e in list(msp):
+        try:
+            b = e.bbox()
+        except Exception:
+            b = None
+        if not b:
+            # MTEXT/INSERT 等 bbox 可能为 None，退而取插入点
+            try:
+                ip = e.dxf.insert
+                _bb_min_x = min(_bb_min_x, ip.x); _bb_min_y = min(_bb_min_y, ip.y)
+                _bb_max_x = max(_bb_max_x, ip.x); _bb_max_y = max(_bb_max_y, ip.y)
+            except Exception:
+                pass
+            continue
+        _bb_min_x = min(_bb_min_x, b.extmin.x)
+        _bb_min_y = min(_bb_min_y, b.extmin.y)
+        _bb_max_x = max(_bb_max_x, b.extmax.x)
+        _bb_max_y = max(_bb_max_y, b.extmax.y)
+    # 纳入已知图例/说明区域（MTEXT bbox 不稳定时兜底）
+    _bb_min_x = min(_bb_min_x, legend_origin[0])
+    _bb_min_y = min(_bb_min_y, legend_origin[1])
+    _bb_max_x = max(_bb_max_x, legend_origin[0] + 5000 * s, max_x + 1000 + 5000 * s)
+    _bb_max_y = max(_bb_max_y, legend_origin[1] + 4000 * s, max_y - 500 + 2500 * s)
+    # 选幅面：取不小于内容尺寸（含留白）的最小标准幅面（横式）
+    _pad_w = (25 + 10) * s
+    _pad_h = (10 + 10) * s
+    _frame_w = (_bb_max_x - _bb_min_x) + _pad_w
+    _frame_h = (_bb_max_y - _bb_min_y) + _pad_h
+    _chosen = "A0"
+    for _sz in ("A4", "A3", "A2", "A1", "A0"):
+        _long, _short = PAPER_BASE[_sz]
+        if _frame_w <= _long * s and _frame_h <= _short * s:
+            _chosen = _sz
+            break
+    _info = FrameInfo(
+        title="一键标注成果图",
+        drawing_no="ENV-ANN-001",
+        scale_str=f"1:{int(s)}",
+        project="标注",
+        size=_chosen,
+        orientation="landscape",
+    )
+    draw_frame_at(doc, s, _info, (_bb_min_x, _bb_min_y, _bb_max_x, _bb_max_y))
+    print(f"  [标注] 已套国标图框(内容自适应，选用 {_chosen} 横式)")
+
     # 9) 机械形位公差（--gdt）
     if args.gdt:
         from envcad.standards.symbols import draw_weld_symbol, draw_surface_roughness
@@ -914,7 +1045,7 @@ def _demo_linetype(out, ver="R2018"):
     print(f"已生成线型示例 -> {p}")
 
 
-def _demo_paperspace(out, paper="A3", project="", drawing_no=""):
+def _demo_paperspace(out, paper="A2", project="", drawing_no=""):
     import ezdxf, os
     from envcad.standards.paperspace import create_layout, add_viewport, add_title_block
     doc = ezdxf.new("R2018")

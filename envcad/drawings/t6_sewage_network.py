@@ -18,7 +18,7 @@ from typing import Dict, List, Tuple
 from ezdxf.enums import TextEntityAlignment
 
 from ..engine.dxf_base import new_drawing, save_dxf
-from ..standards.frame import FrameInfo, draw_frame
+from ..standards.frame import FrameInfo, draw_frame, save_dxf_autofit
 from ..standards.annotate import (
     _t, draw_elevation, draw_flow_arrow, draw_pipe_diameter,
 )
@@ -447,4 +447,4 @@ def gen_t6(out_dir: str, scale: float = 200.0) -> str:
                     report_title, lines, width=86, line_h=6.0,
                     tracker=tracker)
 
-    return save_dxf(doc, os.path.join(out_dir, "T6_污水自流管网平面布置图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "T6_污水自流管网平面布置图.dxf"), scale, info, tracker)

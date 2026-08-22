@@ -17,7 +17,7 @@ PAPER_SIZES = {
 }
 
 
-def create_layout(doc, name="布局1", paper="A3", landscape=True):
+def create_layout(doc, name="布局1", paper="A2", landscape=True):
     """创建图纸空间布局（等同 AutoCAD 的 Layout 页签）。
 
     Args:
@@ -29,7 +29,7 @@ def create_layout(doc, name="布局1", paper="A3", landscape=True):
         layout 对象
     """
     layout = doc.layouts.new(name)
-    pw, ph = PAPER_SIZES.get(paper, PAPER_SIZES["A3"])
+    pw, ph = PAPER_SIZES.get(paper, PAPER_SIZES["A2"])
     if not landscape:
         pw, ph = ph, pw
 
@@ -83,7 +83,7 @@ def add_viewport(layout, center, width, height, scale=100.0, layer="0"):
     return vp
 
 
-def setup_print_config(layout, ctb=None, paper="A3", landscape=True):
+def setup_print_config(layout, ctb=None, paper="A2", landscape=True):
     """配置打印样式（标注性，DPI等由 CAD 打开后设置）。"""
     if ctb:
         try:
@@ -154,7 +154,7 @@ def add_title_block(layout, origin, width, height,
     return (ox + width, oy - height)
 
 
-def quick_sheet(doc, paper="A3", project="", drawing_no="",
+def quick_sheet(doc, paper="A2", project="", drawing_no="",
                 vp_center=(210, 148), vp_size=(380, 270), scale=100.0):
     """一键创建标准图纸（布局 + 视口 + 标题栏）。
 
@@ -173,7 +173,7 @@ def quick_sheet(doc, paper="A3", project="", drawing_no="",
     layout = create_layout(doc, name="Sheet1", paper=paper)
     setup_print_config(layout, paper=paper)
     add_viewport(layout, vp_center, vp_size[0], vp_size[1], scale=scale)
-    pw, ph = PAPER_SIZES.get(paper, PAPER_SIZES["A3"])
+    pw, ph = PAPER_SIZES.get(paper, PAPER_SIZES["A2"])
     tw, th = 180, 20  # 标题栏尺寸
     add_title_block(layout, (pw - 10 - tw, ph - 10), tw, th,
                     project=project, drawing_no=drawing_no, scale_str=f"1:{int(scale)}")

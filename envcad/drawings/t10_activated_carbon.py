@@ -14,7 +14,7 @@ import os
 from ezdxf.enums import TextEntityAlignment
 
 from ..engine.dxf_base import new_drawing, save_dxf
-from ..standards.frame import FrameInfo, draw_frame
+from ..standards.frame import FrameInfo, draw_frame, save_dxf_autofit
 from ..standards.annotate import _t, draw_flow_arrow
 from ..standards.legend import draw_legend
 from ..standards.activated_carbon import (
@@ -32,7 +32,8 @@ def _frame(doc, scale, title, no, project, tracker):
     info = FrameInfo(title=title, drawing_no=no, scale_str=f"1:{int(scale)}",
                      project=project, unit="环保工程",
                      designer="envcad", date="2026.08")
-    return draw_frame(doc, scale, info, tracker=tracker)
+    x0, y0, x1, y1 = draw_frame(doc, scale, info, tracker=tracker)
+    return x0, y0, x1, y1, info
 
 
 def gen_activated_carbon(out_dir: str, level: str = "B", air_flow: float = 10000.0,
@@ -56,7 +57,7 @@ def gen_activated_carbon(out_dir: str, level: str = "B", air_flow: float = 10000
 def _s1_outline(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "活性炭吸附装置外形总图", "AC-01", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "活性炭吸附装置外形总图", "AC-01", project, tracker)
     s = scale
     draw_ac_elevation(msp, (x0 + 14000, y0 + 10000), p, scale,
                       label="正立面图", tracker=tracker)
@@ -73,13 +74,13 @@ def _s1_outline(out_dir, scale, p, project):
                      "罐体碳钢/不锈钢，内表面防腐。",
                      "设计执行 HJ 2026—2013，验收 GB 16297。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "AC-01_外形总图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "AC-01_外形总图.dxf"), scale, info, tracker)
 
 
 def _s2_spec(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "技术特性表", "AC-02", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "技术特性表", "AC-02", project, tracker)
     s = scale
     rows = [
         ("废气量", f"{p['air_flow']:.0f}", "m³/h"),
@@ -104,13 +105,13 @@ def _s2_spec(out_dir, scale, p, project):
                      "活性炭选用煤质/椰壳颗粒炭，碘值≥800mg/g。",
                      f"吸附周期约 {p['cycle_h']:.0f}h，饱和后蒸汽再生。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "AC-02_技术特性表.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "AC-02_技术特性表.dxf"), scale, info, tracker)
 
 
 def _s3_section(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "活性炭吸附罐纵剖面图", "AC-03", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "活性炭吸附罐纵剖面图", "AC-03", project, tracker)
     s = scale
     draw_ac_section(msp, (x0 + 16000, y0 + 10000), p, scale,
                     label="1-1 剖面图", tracker=tracker)
@@ -120,13 +121,13 @@ def _s3_section(out_dir, scale, p, project):
                      "炭层下设支撑格栅+滤网，防炭粒流失。",
                      "顶部设脱附蒸汽分布管。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "AC-03_纵剖面图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "AC-03_纵剖面图.dxf"), scale, info, tracker)
 
 
 def _s4_carbon_bed(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "活性炭层详图", "AC-04", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "活性炭层详图", "AC-04", project, tracker)
     s = scale
     draw_ac_carbon_bed(msp, (x0 + 8000, y0 + 14000), p, scale,
                        label="活性炭层详图", tracker=tracker)
@@ -136,13 +137,13 @@ def _s4_carbon_bed(out_dir, scale, p, project):
                      "顶部压紧格栅，防气流扰动流化。",
                      "装填密实均匀，密度约 500kg/m³。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "AC-04_炭层详图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "AC-04_炭层详图.dxf"), scale, info, tracker)
 
 
 def _s5_desorption(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "脱附系统图", "AC-05", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "脱附系统图", "AC-05", project, tracker)
     s = scale
     draw_ac_desorption(msp, (x0 + 6000, y0 + 16000), p, scale,
                        label="脱附系统图", avail_w=(x1 - x0) - 12000, tracker=tracker)
@@ -152,13 +153,13 @@ def _s5_desorption(out_dir, scale, p, project):
                      f"脱附周期约 {p['cycle_h']:.0f}h，可在线切换。",
                      "高沸点溶剂宜用热氮气再生。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "AC-05_脱附系统图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "AC-05_脱附系统图.dxf"), scale, info, tracker)
 
 
 def _s6_piping(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "管路系统图", "AC-06", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "管路系统图", "AC-06", project, tracker)
     s = scale
     draw_ac_piping(msp, (x0 + 4000, y0 + 6000), p, scale,
                    label="管路系统图", tracker=tracker)
@@ -168,13 +169,13 @@ def _s6_piping(out_dir, scale, p, project):
                      "脱附蒸汽/冷凝水管路单独敷设。",
                      "系统负压运行，阀门气密防泄漏。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "AC-06_管路系统图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "AC-06_管路系统图.dxf"), scale, info, tracker)
 
 
 def _s7_flow(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "VOC治理工艺流程图", "AC-07", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "VOC治理工艺流程图", "AC-07", project, tracker)
     s = scale
     stages = ["VOC废气", "预过滤", "活性炭吸附", "风机", "排气筒"]
     n = len(stages)
@@ -201,13 +202,13 @@ def _s7_flow(out_dir, scale, p, project):
                      "净化气经风机由排气筒达标排放。",
                      f"去除率≥{p['eff']*100:.0f}%，适用于低浓度大风量VOC。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "AC-07_工艺流程图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "AC-07_工艺流程图.dxf"), scale, info, tracker)
 
 
 def _s8_material(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "设备材料表", "AC-08", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "设备材料表", "AC-08", project, tracker)
     rows = [
         ("1", "活性炭吸附罐", f"Φ{p['D']}×{p['H_total']/1000:.1f}m 碳钢防腐", "台", "1"),
         ("2", "颗粒活性炭", f"碘值≥800 {p['carbon_wt']:.0f}kg", "kg", f"{p['carbon_wt']:.0f}"),
@@ -225,4 +226,4 @@ def _s8_material(out_dir, scale, p, project):
     draw_material_table(msp, (x0 + 8000, y1 - 8000), scale, rows, tracker)
     _t(msp, "设备材料表", (x0 + (x1 - x0) / 2, y0 + 5000), 5 * scale,
        align=MC, layer="文字-标题", tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "AC-08_设备材料表.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "AC-08_设备材料表.dxf"), scale, info, tracker)

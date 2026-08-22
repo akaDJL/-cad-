@@ -14,7 +14,7 @@ import os
 from ezdxf.enums import TextEntityAlignment
 
 from ..engine.dxf_base import new_drawing, save_dxf
-from ..standards.frame import FrameInfo, draw_frame
+from ..standards.frame import FrameInfo, draw_frame, save_dxf_autofit
 from ..standards.annotate import _t, draw_flow_arrow
 from ..standards.legend import draw_legend
 from ..standards.spray_tower import (
@@ -33,7 +33,8 @@ def _frame(doc, scale, title, no, project, tracker):
     info = FrameInfo(title=title, drawing_no=no, scale_str=f"1:{int(scale)}",
                      project=project, unit="环保工程",
                      designer="envcad", date="2026.08")
-    return draw_frame(doc, scale, info, tracker=tracker)
+    x0, y0, x1, y1 = draw_frame(doc, scale, info, tracker=tracker)
+    return x0, y0, x1, y1, info
 
 
 def gen_spray_tower(out_dir: str, level: str = "B", air_flow: float = 50000.0,
@@ -57,7 +58,7 @@ def gen_spray_tower(out_dir: str, level: str = "B", air_flow: float = 50000.0,
 def _s1_outline(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "脱硫塔外形总图", "ST-01", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "脱硫塔外形总图", "ST-01", project, tracker)
     s = scale
     draw_spray_tower_elevation(msp, (x0 + 12000, y0 + 4000), p, scale,
                                label="正立面图", tracker=tracker)
@@ -74,13 +75,13 @@ def _s1_outline(out_dir, scale, p, project):
                      "塔体碳钢内衬玻璃鳞片防腐，喷淋层 FRP。",
                      "设计执行 HJ 2001—2018，验收 GB 16297。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "ST-01_外形总图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "ST-01_外形总图.dxf"), scale, info, tracker)
 
 
 def _s2_spec(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "技术特性表", "ST-02", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "技术特性表", "ST-02", project, tracker)
     s = scale
     rows = [
         ("烟气量", f"{p['air_flow']:.0f}", "m³/h"),
@@ -105,13 +106,13 @@ def _s2_spec(out_dir, scale, p, project):
                      "喷淋浆液为石灰石浆，钙硫比 1.02~1.08。",
                      "副产物石膏经脱水外运综合利用。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "ST-02_技术特性表.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "ST-02_技术特性表.dxf"), scale, info, tracker)
 
 
 def _s3_section(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "脱硫塔纵剖面图", "ST-03", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "脱硫塔纵剖面图", "ST-03", project, tracker)
     s = scale
     draw_spray_tower_section(msp, (x0 + 16000, y0 + 5000), p, scale,
                              label="1-1 剖面图", tracker=tracker)
@@ -121,13 +122,13 @@ def _s3_section(out_dir, scale, p, project):
                      "浆池设氧化空气管，亚硫酸钙强制氧化。",
                      "除雾器 2 级，出口雾滴≤75mg/m³。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "ST-03_纵剖面图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "ST-03_纵剖面图.dxf"), scale, info, tracker)
 
 
 def _s4_spray_layer(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "喷淋层布置图", "ST-04", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "喷淋层布置图", "ST-04", project, tracker)
     s = scale
     draw_spray_tower_spray_layer(msp, (x0 + 22000, y0 + 15000), p, scale,
                                  label="喷淋层布置图", tracker=tracker)
@@ -137,13 +138,13 @@ def _s4_spray_layer(out_dir, scale, p, project):
                      f"每喷淋层配一台循环泵（{p['pump_q']:.0f}m³/h）。",
                      "喷淋层可拆卸，便于检修更换喷嘴。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "ST-04_喷淋层布置图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "ST-04_喷淋层布置图.dxf"), scale, info, tracker)
 
 
 def _s5_demister(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "除雾器详图", "ST-05", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "除雾器详图", "ST-05", project, tracker)
     s = scale
     draw_spray_tower_demister(msp, (x0 + 8000, y0 + 12000), p, scale,
                               label="除雾器详图", tracker=tracker)
@@ -153,13 +154,13 @@ def _s5_demister(out_dir, scale, p, project):
                      "出口雾滴浓度≤75mg/m³。",
                      "折流板间距按气流分布均匀设计。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "ST-05_除雾器详图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "ST-05_除雾器详图.dxf"), scale, info, tracker)
 
 
 def _s6_slurry(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "浆池及循环系统图", "ST-06", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "浆池及循环系统图", "ST-06", project, tracker)
     s = scale
     draw_spray_tower_slurry_system(msp, (x0 + 8000, y0 + 12000), p, scale,
                                    label="浆池及循环系统图", tracker=tracker)
@@ -169,13 +170,13 @@ def _s6_slurry(out_dir, scale, p, project):
                      f"循环泵 {p['n_pump']} 台，单台 {p['pump_q']:.0f}m³/h。",
                      "石膏浆液排出至真空皮带脱水机。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "ST-06_浆池及循环系统图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "ST-06_浆池及循环系统图.dxf"), scale, info, tracker)
 
 
 def _s7_flow(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "脱硫工艺流程图", "ST-07", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "脱硫工艺流程图", "ST-07", project, tracker)
     s = scale
     stages = ["锅炉烟气", "除尘器", "脱硫塔", "除雾器", "烟囱排放"]
     n = len(stages)
@@ -202,13 +203,13 @@ def _s7_flow(out_dir, scale, p, project):
                      "净化烟气经除雾器后由烟囱排放。",
                      "脱硫效率≥95%，副产石膏综合利用。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "ST-07_工艺流程图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "ST-07_工艺流程图.dxf"), scale, info, tracker)
 
 
 def _s8_material(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "设备材料表", "ST-08", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "设备材料表", "ST-08", project, tracker)
     rows = [
         ("1", "脱硫塔塔体", f"Φ{p['D']}×{p['H_total']/1000:.1f}m 碳钢玻璃鳞片", "座", "1"),
         ("2", "喷淋层", f"FRP母管+碳化硅喷嘴 ×{p['n_spray']}", "层", f"{p['n_spray']}"),
@@ -226,4 +227,4 @@ def _s8_material(out_dir, scale, p, project):
     draw_material_table(msp, (x0 + 8000, y1 - 8000), scale, rows, tracker)
     _t(msp, "设备材料表", (x0 + (x1 - x0) / 2, y0 + 5000), 5 * scale,
        align=MC, layer="文字-标题", tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "ST-08_设备材料表.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "ST-08_设备材料表.dxf"), scale, info, tracker)

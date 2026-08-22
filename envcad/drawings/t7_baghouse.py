@@ -21,7 +21,7 @@ import os
 from ezdxf.enums import TextEntityAlignment
 
 from ..engine.dxf_base import new_drawing, save_dxf
-from ..standards.frame import FrameInfo, draw_frame
+from ..standards.frame import FrameInfo, draw_frame, save_dxf_autofit
 from ..standards.annotate import _t, draw_flow_arrow
 from ..standards.legend import draw_legend
 from ..standards.baghouse import (
@@ -39,7 +39,8 @@ def _frame(doc, scale, title, no, project, tracker):
     info = FrameInfo(title=title, drawing_no=no, scale_str=f"1:{int(scale)}",
                      project=project, unit="环保工程",
                      designer="envcad", date="2026.08")
-    return draw_frame(doc, scale, info, tracker=tracker)
+    x0, y0, x1, y1 = draw_frame(doc, scale, info, tracker=tracker)
+    return x0, y0, x1, y1, info
 
 
 def gen_baghouse(out_dir: str, level: str = "B", air_flow: float = 20000.0,
@@ -67,7 +68,7 @@ def gen_baghouse(out_dir: str, level: str = "B", air_flow: float = 20000.0,
 def _s1_outline(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "袋式除尘器外形总图", "BH-01", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "袋式除尘器外形总图", "BH-01", project, tracker)
     s = scale
 
     # 正立面（左半区，设备左下角为原点）
@@ -92,14 +93,14 @@ def _s1_outline(out_dir, scale, p, project):
                      "壳体 Q235B 钢板，厚度≥5mm，外表面除锈刷漆。",
                      "安装执行 HJ 2020—2012，验收执行 GB 16297。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "BH-01_外形总图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "BH-01_外形总图.dxf"), scale, info, tracker)
 
 
 # ═══ A-02 技术特性表 ═══
 def _s2_spec(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "技术特性表", "BH-02", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "技术特性表", "BH-02", project, tracker)
     s = scale
 
     rows = [
@@ -129,14 +130,14 @@ def _s2_spec(out_dir, scale, p, project):
                      "滤袋材质按烟气性质选用（涤纶/PPS/PTFE）。",
                      "喷吹气源为压缩空气，压力 0.4~0.6 MPa。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "BH-02_技术特性表.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "BH-02_技术特性表.dxf"), scale, info, tracker)
 
 
 # ═══ B-03 纵剖面图 ═══
 def _s3_section(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "袋式除尘器纵剖面图", "BH-03", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "袋式除尘器纵剖面图", "BH-03", project, tracker)
     s = scale
     draw_baghouse_section(msp, (x0 + 16000, y0 + 9000), p, scale,
                           label="1-1 剖面图", tracker=tracker)
@@ -147,14 +148,14 @@ def _s3_section(out_dir, scale, p, project):
                      "滤袋与花板孔采用弹性涨圈密封，不漏气。",
                      "净气室与袋室密封隔离，漏风率≤3%。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "BH-03_纵剖面图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "BH-03_纵剖面图.dxf"), scale, info, tracker)
 
 
 # ═══ B-04 花板布置图 ═══
 def _s4_tube_sheet(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "花板布置图", "BH-04", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "花板布置图", "BH-04", project, tracker)
     s = scale
     draw_baghouse_tube_sheet(msp, (x0 + 12000, y0 + 10000), p, scale,
                              label="花板布置图", tracker=tracker)
@@ -165,14 +166,14 @@ def _s4_tube_sheet(out_dir, scale, p, project):
                      f"孔中心距 {p['spacing']:.0f} mm，偏差≤±1mm。",
                      "花板平面度≤2‰，焊后整体热处理。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "BH-04_花板布置图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "BH-04_花板布置图.dxf"), scale, info, tracker)
 
 
 # ═══ B-05 喷吹系统图 ═══
 def _s5_pulse(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "喷吹系统图", "BH-05", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "喷吹系统图", "BH-05", project, tracker)
     s = scale
     draw_baghouse_pulse(msp, (x0 + 12000, y0 + 12000), p, scale,
                         label="喷吹系统图", tracker=tracker)
@@ -183,14 +184,14 @@ def _s5_pulse(out_dir, scale, p, project):
                      "喷吹压力 0.4~0.6 MPa，脉冲宽度 0.1~0.2 s。",
                      "气包配安全阀、排污阀，容量满足连续喷吹。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "BH-05_喷吹系统图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "BH-05_喷吹系统图.dxf"), scale, info, tracker)
 
 
 # ═══ B-06 灰斗及卸料装置详图 ═══
 def _s6_hopper(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "灰斗及卸料装置详图", "BH-06", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "灰斗及卸料装置详图", "BH-06", project, tracker)
     s = scale
     draw_baghouse_hopper(msp, (x0 + 14000, y1 - 12000), p, scale,
                          label="灰斗及卸料装置详图", tracker=tracker)
@@ -200,14 +201,14 @@ def _s6_hopper(out_dir, scale, p, project):
                      "卸料采用插板阀+星型卸料器，锁风防漏。",
                      "灰斗外壁设蒸汽/电伴热（高湿烟气时）。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "BH-06_灰斗及卸料装置详图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "BH-06_灰斗及卸料装置详图.dxf"), scale, info, tracker)
 
 
 # ═══ C-07 除尘系统工艺流程图 ═══
 def _s7_flow(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "除尘系统工艺流程图", "BH-07", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "除尘系统工艺流程图", "BH-07", project, tracker)
     s = scale
 
     stages = ["集气罩", "风管", "袋式除尘器", "离心风机", "烟囱排放"]
@@ -236,14 +237,14 @@ def _s7_flow(out_dir, scale, p, project):
                      "除尘器收集的粉尘经卸料装置定期外运。",
                      "系统负压运行，风机置于除尘器后（清洁侧）。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "BH-07_工艺流程图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "BH-07_工艺流程图.dxf"), scale, info, tracker)
 
 
 # ═══ C-08 设备材料表 ═══
 def _s8_material(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "设备材料表", "BH-08", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "设备材料表", "BH-08", project, tracker)
     rows = [
         ("1", "袋式除尘器本体", f"{p['filter_area']}m² Q235B", "台", "1"),
         ("2", "滤袋", f"Φ{p['bag_dia_mm']:.0f}×{p['bag_len_mm']:.0f} 涤纶针刺毡", "条", f"{p['n_bags']}"),
@@ -261,4 +262,4 @@ def _s8_material(out_dir, scale, p, project):
     draw_material_table(msp, (x0 + 8000, y1 - 8000), scale, rows, tracker)
     _t(msp, "设备材料表", (x0 + (x1 - x0) / 2, y0 + 5000), 5 * scale,
        align=MC, layer="文字-标题", tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "BH-08_设备材料表.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "BH-08_设备材料表.dxf"), scale, info, tracker)

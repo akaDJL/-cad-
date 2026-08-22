@@ -15,7 +15,7 @@ import os
 from ezdxf.enums import TextEntityAlignment
 
 from ..engine.dxf_base import new_drawing, save_dxf
-from ..standards.frame import FrameInfo, draw_frame
+from ..standards.frame import FrameInfo, draw_frame, save_dxf_autofit
 from ..standards.annotate import _t, draw_flow_arrow
 from ..standards.legend import draw_legend
 from ..standards.chimney import (
@@ -33,7 +33,8 @@ def _frame(doc, scale, title, no, project, tracker):
     info = FrameInfo(title=title, drawing_no=no, scale_str=f"1:{int(scale)}",
                      project=project, unit="环保工程",
                      designer="envcad", date="2026.08")
-    return draw_frame(doc, scale, info, tracker=tracker)
+    x0, y0, x1, y1 = draw_frame(doc, scale, info, tracker=tracker)
+    return x0, y0, x1, y1, info
 
 
 def gen_chimney(out_dir: str, level: str = "B", air_flow: float = 50000.0,
@@ -57,7 +58,7 @@ def gen_chimney(out_dir: str, level: str = "B", air_flow: float = 50000.0,
 def _s1_outline(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "钢烟囱外形总图", "CH-01", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "钢烟囱外形总图", "CH-01", project, tracker)
     s = scale
     draw_chimney_elevation(msp, (x0 + 8000, y0 + 4000), p, scale,
                            label="正立面图（折断画法）", tracker=tracker)
@@ -74,13 +75,13 @@ def _s1_outline(out_dir, scale, p, project):
                      f"平台 {p['n_platform']} 层，爬梯带护笼，顶部避雷针。",
                      "设计执行 GB 50051—2021，验收 GB 16297。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "CH-01_外形总图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "CH-01_外形总图.dxf"), scale, info, tracker)
 
 
 def _s2_spec(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "技术特性表", "CH-02", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "技术特性表", "CH-02", project, tracker)
     s = scale
     rows = [
         ("烟气量", f"{p['air_flow']:.0f}", "m³/h"),
@@ -101,13 +102,13 @@ def _s2_spec(out_dir, scale, p, project):
                      "外表面爬梯、平台热镀锌防腐。",
                      "航空障碍灯按民航规定设置（H≥45m 时）。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "CH-02_技术特性表.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "CH-02_技术特性表.dxf"), scale, info, tracker)
 
 
 def _s3_section(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "钢烟囱纵剖面图", "CH-03", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "钢烟囱纵剖面图", "CH-03", project, tracker)
     s = scale
     draw_chimney_section(msp, (x0 + 10000, y0 + 4000), p, scale,
                          label="1-1 剖面图（折断画法）", tracker=tracker)
@@ -116,13 +117,13 @@ def _s3_section(out_dir, scale, p, project):
                      "锥形筒体，底部加强，环向加劲肋。",
                      "内衬耐酸耐热，适应湿烟气腐蚀。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "CH-03_纵剖面图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "CH-03_纵剖面图.dxf"), scale, info, tracker)
 
 
 def _s4_sample(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "采样孔详图", "CH-04", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "采样孔详图", "CH-04", project, tracker)
     s = scale
     draw_chimney_sample_port(msp, (x0 + 12000, y0 + 10000), p, scale,
                              label="采样孔详图", tracker=tracker)
@@ -131,13 +132,13 @@ def _s4_sample(out_dir, scale, p, project):
                      "配采样平台与爬梯，便于 CEMS 监测。",
                      "采样管带截止阀，不用时密封。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "CH-04_采样孔详图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "CH-04_采样孔详图.dxf"), scale, info, tracker)
 
 
 def _s5_platform(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "休息平台详图", "CH-05", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "休息平台详图", "CH-05", project, tracker)
     s = scale
     draw_chimney_platform(msp, (x0 + 8000, y0 + 14000), p, scale,
                           label="休息平台详图", tracker=tracker)
@@ -147,13 +148,13 @@ def _s5_platform(out_dir, scale, p, project):
                      "栏杆高 1050mm，三横杆+踢脚板。",
                      "爬梯带护笼，底部设防坠自锁器。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "CH-05_休息平台详图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "CH-05_休息平台详图.dxf"), scale, info, tracker)
 
 
 def _s6_foundation(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "烟囱基础详图", "CH-06", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "烟囱基础详图", "CH-06", project, tracker)
     s = scale
     draw_chimney_foundation(msp, (x0 + 8000, y0 + 12000), p, scale,
                             label="烟囱基础详图", tracker=tracker)
@@ -162,13 +163,13 @@ def _s6_foundation(out_dir, scale, p, project):
                      "配双层双向钢筋，地脚螺栓预埋。",
                      "基础按风荷载与地震作用验算抗倾覆。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "CH-06_烟囱基础详图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "CH-06_烟囱基础详图.dxf"), scale, info, tracker)
 
 
 def _s7_flow(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "废气排放系统流程图", "CH-07", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "废气排放系统流程图", "CH-07", project, tracker)
     s = scale
     stages = ["废气", "治理设备", "风机", "钢烟囱", "达标排放"]
     n = len(stages)
@@ -191,13 +192,13 @@ def _s7_flow(out_dir, scale, p, project):
                      f"烟囱高 {p['H']}m，出口烟速 {p['v_out']}m/s 防倒灌。",
                      "CEMS 在线监测设于烟囱直管段采样孔。"],
                     width=TECH_W, tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "CH-07_工艺流程图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "CH-07_工艺流程图.dxf"), scale, info, tracker)
 
 
 def _s8_material(out_dir, scale, p, project):
     doc, _, tracker = new_drawing(scale, return_tracker=True)
     msp = doc.modelspace()
-    x0, y0, x1, y1 = _frame(doc, scale, "设备材料表", "CH-08", project, tracker)
+    x0, y0, x1, y1, info = _frame(doc, scale, "设备材料表", "CH-08", project, tracker)
     rows = [
         ("1", "烟囱筒体", f"Φ{p['D_base']}→Φ{p['D_out']}m Q235B δ={p['wall_t']}", "t", "8"),
         ("2", "内衬防腐", "玻璃鳞片 耐酸", "m²", "120"),
@@ -213,4 +214,4 @@ def _s8_material(out_dir, scale, p, project):
     draw_material_table(msp, (x0 + 8000, y1 - 8000), scale, rows, tracker)
     _t(msp, "设备材料表", (x0 + (x1 - x0) / 2, y0 + 5000), 5 * scale,
        align=MC, layer="文字-标题", tracker=tracker)
-    return save_dxf(doc, os.path.join(out_dir, "CH-08_设备材料表.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "CH-08_设备材料表.dxf"), scale, info, tracker)

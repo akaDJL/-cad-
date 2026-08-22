@@ -10,7 +10,7 @@ from ..utils import _r
 def create_detail_view(doc, msp_center: Tuple[float, float],
                        radius: float, label: str = "I",
                        scale: float = 100.0, zoom_factor: float = 5.0,
-                       paper="A3", layout_name="详图",
+                       paper="A2", layout_name="详图",
                        vp_center=(210, 148), vp_size=(350, 250),
                        tracker=None):
     """在主图画详图圈，在纸空间创建放大视口。

@@ -19,7 +19,7 @@ from ..engine.dxf_base import new_drawing, save_dxf, BBoxTracker
 from ..engine.collision_fix import TrackedMSpace, post_process_overlaps
 from ..standards.styles import setup_text_styles
 from ..standards.layers import setup_layers
-from ..standards.frame import draw_frame, FrameInfo
+from ..standards.frame import draw_frame, FrameInfo, save_dxf_autofit
 from ..standards.annotate import _t
 from ..components.fasteners import (
     draw_hex_bolt, draw_hex_nut, draw_screw,
@@ -176,7 +176,7 @@ def batch_fasteners(
 
             post_process_overlaps(doc, tracker)
             fname = f"{component}_{spec}_L{int(length)}.dxf"
-            path = save_dxf(doc, os.path.join(out_dir, fname))
+            path = save_dxf_autofit(doc, os.path.join(out_dir, fname), scale, frame_info, tracker)
             paths.append(path)
 
     else:
@@ -228,7 +228,7 @@ def batch_fasteners(
 
         post_process_overlaps(doc, tracker)
         fname = f"{component}_batch_{n}specs.dxf"
-        path = save_dxf(doc, os.path.join(out_dir, fname))
+        path = save_dxf_autofit(doc, os.path.join(out_dir, fname), scale, frame_info, tracker)
         paths.append(path)
 
     return paths
@@ -309,5 +309,5 @@ def batch_mixed(
 
     post_process_overlaps(doc, tracker)
     fname = f"mixed_batch_{n}items.dxf"
-    path = save_dxf(doc, os.path.join(out_dir, fname))
+    path = save_dxf_autofit(doc, os.path.join(out_dir, fname), scale, frame_info, tracker)
     return [path]

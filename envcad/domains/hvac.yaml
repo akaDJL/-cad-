@@ -14,3 +14,7 @@ functions:
   cooling_tower: "draw_cooling_tower"
   chiller: "draw_chiller"
   boiler: "draw_boiler"
+  hvac_valve: "draw_hvac_valve"
+  hvac_outlet: "draw_hvac_outlet"
+  hvac_accessory: "draw_hvac_accessory"
+  hvac_legend: "draw_hvac_legend"

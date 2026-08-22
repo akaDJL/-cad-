@@ -60,10 +60,10 @@
     "Sheet": [
       {
         "dim": "Sheet",
-        "std": "GB/T 50001-2017",
-        "clause": "3.1",
-        "industry": ["building"],
-        "name": "图纸幅面尺寸",
+        "std": "GB/T 14689-2008 (GB/T 50001-2017 引用)",
+        "clause": "幅面与格式",
+        "industry": ["building", "mechanical", "electrical", "env"],
+        "name": "图纸幅面与留边（GB/T 14689-2008）",
         "param": {
           "series": ["A0", "A1", "A2", "A3", "A4"],
           "size_mm": {
@@ -73,10 +73,12 @@
             "A3": { "w": 297, "h": 420 },
             "A4": { "w": 210, "h": 297 }
           },
-          "border_c_mm": 10,
+          "border_a_mm": 25,
+          "border_c_mm": {"A0": 10, "A1": 10, "A2": 10, "A3": 5, "A4": 5},
           "border_e_mm_large": 20,
           "border_e_mm_small": 10,
-          "note": "c为装订边，e为非装订边；A0-A1 e=20，A2-A4 e=10"
+          "default_size": "A2",
+          "note": "a=装订边(左)=25mm；c=其他三边：A0/A1/A2=10mm，A3/A4=5mm；e=非装订边(A0/A1=20，A2/A3/A4=10)。默认图幅A2。"
         },
         "cadExec": {
           "tool": "drawTitleBlock",

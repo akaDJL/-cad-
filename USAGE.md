@@ -41,6 +41,22 @@ python -m envcad.cli domain emergency --function risk_dispersion --out D:\输出
 
 不指定 --function 时列出该领域所有可用函数。
 
+### 2.1 图幅与方向（不再强制 A3）
+
+所有出图命令均支持 `--size` 与 `--orientation`，按 GB/T 14689 选择图幅：
+
+```bash
+# A1 横式（默认 A2 横式）
+python -m envcad.cli domain solid_waste --function landfill_section --size A1 --out D:\输出
+# A4 纵式（零件/详图常用）
+python -m envcad.cli equip baghouse --level B --size A4 --orientation portrait --out D:\输出
+```
+
+- `--size`：`A0`/`A1`/`A2`/`A3`/`A4`（默认 `A2`）
+- `--orientation`：`landscape`（横式，默认）/ `portrait`（纵式）
+- 标题栏随图幅等比缩放（A0/A1 放大、A3/A4 不变），保持比例正确。
+- 适用命令：`domain`、`batch`、`equip`、`param`。
+
 ### 3. 批量出图（JSON配置）
 
 ```bash
@@ -49,6 +65,9 @@ python -m envcad.cli batch --config batch_example.json --out D:\批量输出
 
 > 内置示例 `batch_example.json` 位于 `envcad/` 包内。`--config` 若只写文件名（不含路径），
 > 会自动回退到包目录查找，因此可从任意目录直接运行上面的命令。
+
+批量 JSON 中每条任务可单独写 `"paper"` / `"orientation"` 字段覆盖命令行图幅，例如
+`{"domain":"hvac","function":"hvac_legend","paper":"A2","orientation":"landscape",...}`。
 
 ### 4. 生成后自动推送到 CAD
 
@@ -100,6 +119,8 @@ python -m envcad.cli test t1 --out D:\测试输出
 | params.params | 否 | 工程参数标注（容量、流量、温度等） |
 | filename | 否 | 输出文件名，默认 domain_function_N.dxf |
 | scale | 否 | 出图比例，默认 100 |
+| paper | 否 | 本条任务图幅：`A0`~`A4`，覆盖命令行 `--size` |
+| orientation | 否 | 本条任务方向：`landscape`/`portrait`，覆盖 `--orientation` |
 
 ### 完整示例
 

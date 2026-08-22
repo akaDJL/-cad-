@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 
 from ..engine.dxf_base import new_drawing, save_dxf
-from ..standards.frame import FrameInfo, draw_frame
+from ..standards.frame import FrameInfo, draw_frame, save_dxf_autofit
 from ..standards.annotate import _t
 from ..components.pool import draw_circular_pool_plan, draw_circular_pool_section
 from . import draw_tech_notes
@@ -65,4 +65,4 @@ def gen_t2(out_dir: str, scale: float = 50.0,
                      "施工及验收执行 GB 50141—2008。"],
                     tracker=tracker)
 
-    return save_dxf(doc, os.path.join(out_dir, "T2_竖流斜管沉淀池平剖面图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "T2_竖流斜管沉淀池平剖面图.dxf"), scale, info, tracker)

@@ -33,7 +33,7 @@ FRAME_MARGIN = 25.0   # 装订边
 OTHER_MARGIN = 10.0    # 其他三边
 
 
-def draw_sheet_frame(msp, paper_size: str = "A3",
+def draw_sheet_frame(msp, paper_size: str = "A2",
                       scale: float = 100.0,
                       layer: str = "粗实线"):
     """绘制标准图幅图框。
@@ -41,7 +41,7 @@ def draw_sheet_frame(msp, paper_size: str = "A3",
     返回: (图幅宽, 图幅高, 内框左下X, 内框左下Y, 内框宽, 内框高)
     """
     if paper_size not in PAPER_SIZES:
-        paper_size = "A3"
+        paper_size = "A2"
 
     pw, ph = PAPER_SIZES[paper_size]
     w = pw * scale
@@ -237,7 +237,7 @@ def _draw_titlebar_grid(msp, ox, oy, w, h, industry, s, layer):
 #  一键创建模板图纸
 # ══════════════════════════════════════════════════════════
 
-def create_sheet(msp, paper: str = "A3",
+def create_sheet(msp, paper: str = "A2",
                   industry: str = "mechanical",
                   project: dict = None,
                   scale: float = 100.0,

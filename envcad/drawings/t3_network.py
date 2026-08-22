@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 
 from ..engine.dxf_base import new_drawing, save_dxf
-from ..standards.frame import FrameInfo, draw_frame
+from ..standards.frame import FrameInfo, draw_frame, save_dxf_autofit
 from ..standards.annotate import _t, draw_elevation, draw_slope, draw_flow_arrow, draw_pipe_diameter
 from ..standards.legend import draw_legend
 from ..components.pipe import draw_pipe
@@ -108,7 +108,7 @@ def gen_t3(out_dir: str, scale: float = 50.0,
                      "管道施工及验收执行 GB 50268—2008。"],
                     tracker=tracker)
 
-    return save_dxf(doc, os.path.join(out_dir, "T3_污水自流管网平面布置图.dxf"))
+    return save_dxf_autofit(doc, os.path.join(out_dir, "T3_污水自流管网平面布置图.dxf"), scale, info, tracker)
 
 
 def _wall(msp, x, pipe_y, scale):
