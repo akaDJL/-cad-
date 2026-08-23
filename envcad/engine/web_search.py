@@ -219,6 +219,63 @@ def extract_params(text: str) -> Dict[str, Any]:
     return params
 
 
+# 紧固件尺寸中文标签 → 字段映射（用于从网页正文抽取精确值）
+_FASTENER_LABELS = {
+    "bolt": [
+        ("对边宽度", "s"), ("对边", "s"), ("扳手尺寸", "s"), ("头部高度", "k"),
+        ("厚度", "k"), ("对角宽度", "e"), ("对角", "e"), ("螺距", "P"),
+        ("螺纹大径", "d"), ("公称直径", "d"),
+    ],
+    "nut": [
+        ("对边宽度", "s"), ("对边", "s"), ("扳手尺寸", "s"), ("螺母高度", "m"),
+        ("厚度", "m"), ("对角宽度", "e"), ("对角", "e"), ("螺距", "P"),
+        ("公称直径", "d"),
+    ],
+    "screw": [
+        ("头部直径", "dk"), ("盘头直径", "dk"), ("对边", "s"), ("头部高度", "k"),
+        ("厚度", "k"), ("螺距", "P"), ("公称直径", "d"),
+    ],
+    "washer": [
+        ("内径", "d1"), ("孔径", "d1"), ("外径", "d2"), ("公称外径", "d2"),
+        ("厚度", "h"), ("高度", "h"),
+    ],
+}
+
+
+def extract_fastener_params(text: str, kind_key: str) -> Dict[str, float]:
+    """从网页正文抽取紧固件精确尺寸，返回 {字段: 数值}。
+
+    策略：正向匹配『标签[:：=]? 数值(mm)?』，标签与数值必须在同一行
+    （禁止跨行贪婪，避免吸到远处数字）。同名标签取第一个有效数字。
+    """
+    labels = _FASTENER_LABELS.get(kind_key, [])
+    if not labels:
+        return {}
+    # 逐行扫描，避免跨行误匹配
+    found: Dict[str, float] = {}
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        for label, field in labels:
+            if field in found:
+                continue
+            # 标签后允许：[可选单位代号如 d1/s/m/k，字母+最多2位数字] + [可选 :=] + 数值
+            m = re.search(
+                re.escape(label) +
+                r"\s*[A-Za-z]+\d{0,2}\s*[:：=]?\s*([0-9]+\.?[0-9]*)", line)
+            if not m:
+                # 退化：标签后直接数值（无代号），如「对边宽度 24」
+                m = re.search(
+                    re.escape(label) + r"\s*[:：=]?\s*([0-9]+\.?[0-9]*)", line)
+            if not m:
+                # 退化：标签与数值间仅空格（代号偶尔缺失），如「公称直径 16」
+                m = re.search(
+                    re.escape(label) + r"[^\d]*?([0-9]+\.?[0-9]*)", line)
+            if m:
+                found[field] = float(m.group(1))
+    return found
+
+
 def _strip_tags(s: str) -> str:
     s = re.sub(r"<[^>]+>", " ", s)
     s = re.sub(r"\s+", " ", s).strip()

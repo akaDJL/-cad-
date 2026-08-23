@@ -150,11 +150,38 @@ def _save_backfill() -> None:
         pass
 
 
+def _verify_from_hits(kind_key: str, hits: List) -> Dict[str, float]:
+    """从搜索结果（含 authority 与 url）抓权威页面正文抽取精确尺寸。
+
+    返回 {字段: 数值}；不足关键字段则返回可能为空 dict。
+    联网失败 / 抽取不足均返回 {}（交由调用方退回估算）。
+    """
+    from ..engine.web_search import extract_fastener_params, _fetch_html
+    verified: Dict[str, float] = {}
+    try:
+        for h in sorted(hits, key=lambda x: getattr(x, "authority", 0), reverse=True):
+            html = _fetch_html(getattr(h, "url", ""))
+            if not html:
+                continue
+            params = extract_fastener_params(html, kind_key)
+            for kk, vv in params.items():
+                if kk not in verified and vv > 0:
+                    verified[kk] = vv
+            if kind_key in ("bolt", "nut") and "s" in verified:
+                break
+            if kind_key == "washer" and "d1" in verified and "d2" in verified:
+                break
+    except Exception:
+        return {}
+    return verified
+
+
 def _web_lookup_fallback(spec: str, kind_zh: str, std_guess: str, kind_key: str) -> Dict:
     """本地未收录规格时的联网回退：不报错，检索权威尺寸并沉淀。
 
-    流程：先查本地落盘缓存 → 命中直接返回；否则联网检索，写入运行时表 + 落盘。
-    返回 dict 含 _estimated=True 与 _refs（权威链接）。
+    流程：先查本地落盘缓存 → 命中直接返回；否则联网检索，优先抓权威页面正文
+    抽取精确尺寸（_verified），抽取不足则退回按比例估算（_estimated）。
+    返回 dict 含尺寸字段与 _refs（权威链接）。
     """
     _load_backfill()
     cache = _BACKFILL.setdefault(kind_key, {})
@@ -162,22 +189,35 @@ def _web_lookup_fallback(spec: str, kind_zh: str, std_guess: str, kind_key: str)
         rec = dict(cache[spec])
         rec["_from_cache"] = True
         return rec
-    try:
-        from .engine_web_bridge import search_web
-        q = f"{std_guess} {spec} 尺寸"
-        results = search_web(q, max_n=5)
-    except Exception:
-        results = []
+    # 基础估算（兜底）
     m = re.search(r"(\d+(?:\.\d+)?)", spec)
     d = float(m.group(1)) if m else 10.0
     rec = {
         "d": d, "P": round(d * 0.15, 2), "s": round(d * 1.6, 1),
         "k": round(d * 0.6, 1), "e": round(d * 1.8, 2),
         "d1": round(d * 1.1, 1), "d2": round(d * 2.0, 1), "h": round(d * 0.2, 1),
+        "m": round(d * 0.8, 1), "dk": round(d * 1.7, 1),
         "_estimated": True,
-        "_note": f"本地未收录 {kind_zh} {spec}，已联网检索权威出处供参考（数值为估算，以标准为准）",
-        "_refs": [{"title": h["title"], "url": h["url"]} for h in results[:3]],
+        "_note": f"本地未收录 {kind_zh} {spec}，已联网检索权威出处（数值为估算，以标准为准）",
+        "_refs": [],
     }
+    try:
+        from ..engine.web_search import search as _raw_search
+        q = f"{std_guess} {spec} 尺寸"
+        hits = _raw_search(q, max_results=5)
+        verified = _verify_from_hits(kind_key, hits)
+        if verified:
+            for kk, vv in verified.items():
+                rec[kk] = round(vv, 3)
+            rec["_estimated"] = False
+            rec["_verified"] = True
+            rec["_note"] = (
+                f"本地未收录 {kind_zh} {spec}，已联网抓取权威页面正文抽取精确尺寸"
+            )
+        rec["_refs"] = [{"title": getattr(h, "title", ""),
+                         "url": getattr(h, "url", "")} for h in hits[:3]]
+    except Exception:
+        pass
     cache[spec] = rec
     _save_backfill()
     return rec
@@ -836,7 +876,7 @@ def _promote_one(kind_key: str, spec: str, rec: Dict) -> Optional[tuple]:
 
     返回 (table_name, spec, fields) 或 None（已转正/非估算/字段缺失）。
     """
-    if not rec.get("_estimated"):
+    if not (rec.get("_estimated") or rec.get("_verified")):
         return None
     if rec.get("_promoted"):
         return None

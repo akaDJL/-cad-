@@ -6,49 +6,23 @@
       "s": 150.0,
       "k": 60.0,
       "e": 173.0,
-      "_estimated": true,
-      "_refs": [],
+      "d1": 108.9,
+      "d2": 198.0,
+      "h": 19.8,
+      "m": 79.2,
+      "dk": 168.3,
+      "_estimated": false,
+      "_note": "本地未收录 螺栓 M99，已联网抓取权威页面正文抽取精确尺寸",
+      "_refs": [
+        {
+          "title": "M99 螺栓尺寸",
+          "url": "http://std.com/bolt99"
+        }
+      ],
+      "_verified": true,
+      "L": 200,
       "_promoted": true,
-      "_promoted_at": "2026-08-23T23:20:10.947707"
-    }
-  },
-  "nut": {
-    "M99": {
-      "d": 99.0,
-      "P": 4.0,
-      "s": 150.0,
-      "m": 92.0,
-      "e": 173.0,
-      "_estimated": true,
-      "_refs": [],
-      "_promoted": true,
-      "_promoted_at": "2026-08-23T23:20:10.947752"
-    }
-  },
-  "screw": {
-    "M70": {
-      "d": 70.0,
-      "P": 3.0,
-      "dk": 105.0,
-      "k": 70.0,
-      "t": 8.0,
-      "type": "hex_socket",
-      "_estimated": true,
-      "_refs": [],
-      "_promoted": true,
-      "_promoted_at": "2026-08-23T23:20:10.947759"
-    }
-  },
-  "washer": {
-    "M70": {
-      "d1": 72.0,
-      "d2": 140.0,
-      "h": 10.0,
-      "type": "spring",
-      "_estimated": true,
-      "_refs": [],
-      "_promoted": true,
-      "_promoted_at": "2026-08-23T23:20:10.947764"
+      "_promoted_at": "2026-08-23T23:53:37.791014"
     }
   }
 }
