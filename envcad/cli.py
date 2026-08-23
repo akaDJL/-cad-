@@ -615,6 +615,21 @@ def main(argv=None):
     equip_p.add_argument("--cod", type=float, default=3000.0, help="[UASB]进水COD mg/L")
     equip_p.add_argument("--nv", type=float, default=8.0, help="[UASB]容积负荷 kgCOD/m³·d")
     equip_p.add_argument("--hreact", type=float, default=6.0, help="[UASB]反应区高度 m")
+
+    # ima 订阅知识库同步（远程同步需 WorkBuddy 内由 AI 触发；本地模式解析已下载文档）
+    sync_kb_p = sub.add_parser("sync-kb", help="同步 ima 订阅知识库到 envcad/knowledge/")
+    sync_kb_p.add_argument("--local-dir", default=None,
+                           help="本地已下载 ima 文档目录（.txt/.md/.json），将解析并入 knowledge")
+    sync_kb_p.add_argument("--knowledge-dir", default=None,
+                           help="知识输出目录，默认 envcad/knowledge/")
+
+    # ima 知识库查询（出图时查国标/图集号）
+    kb_p = sub.add_parser("kb", help="查询 ima 订阅知识库沉淀的国标/图集/设备数据")
+    kb_p.add_argument("kind", choices=["countersink", "stamp-angle", "ejector-pin",
+                                        "atlas", "pipe-atlas", "hvac-sample", "hvac-note"],
+                      help="查询类型")
+    kb_p.add_argument("--arg", default=None, help="查询参数(如规格/M4/化粪池/水泵)")
+
     # 脱硫塔输入条件
     equip_p.add_argument("--so2", type=float, default=2000.0, help="[脱硫]入口SO2 mg/m³")
     equip_p.add_argument("--lg", type=float, default=15.0, help="[脱硫]液气比 L/m³")
@@ -700,6 +715,56 @@ def main(argv=None):
         set_default_paper_size(args.size)
         set_default_orientation(args.orientation)
         return _run_equip(args)
+
+    elif args.command == "sync-kb":
+        from .engine.ima_kb_sync import merge_local_imports
+        from pathlib import Path
+        knowledge_dir = Path(args.knowledge_dir) if args.knowledge_dir else Path(__file__).parent / "knowledge"
+        if args.local_dir:
+            local_dir = Path(args.local_dir)
+            if not local_dir.exists():
+                print(f"[错误] 本地目录不存在: {local_dir}")
+                return 1
+            files = merge_local_imports(local_dir, knowledge_dir)
+            print(f"本地增量同步完成，写入 {len(files)} 个模块:")
+            for f in files:
+                print(f"  - {f}")
+        else:
+            print("[提示] 远程 ima 同步需由 WorkBuddy 会话中的 AI 通过 ima MCP 触发。")
+            print("       如需本地同步，请把 ima 中下载的 .txt/.md/.json 放入一个目录，")
+            print("       然后执行: envcad sync-kb --local-dir <目录路径>")
+        return 0
+
+    elif args.command == "kb":
+        from .knowledge import mech_gb, env_atlas, hvac_extra
+        a = args.arg
+        if args.kind == "countersink":
+            r = mech_gb.countersink(a or "4")
+            print(f"沉孔 GB/T 152.2 规格 {a or '4'}: 螺纹{r[0]} 通孔dh[{r[1]},{r[2]}] "
+                  f"沉孔Dc[{r[3]},{r[4]}] 深t≈{r[5]}mm | 标记 {mech_gb.COUNTERSINK_MARK.format(spec=a or '4')}")
+        elif args.kind == "stamp-angle":
+            grade, L = (a or "AT3,50").split(",")
+            t = mech_gb.angle_tolerance(grade.strip(), float(L.strip()))
+            print(f"冲压/弯曲角度公差 {grade.strip()} (短边L={L.strip()}mm): ±{t}° (GB/T 13915)")
+        elif args.kind == "ejector-pin":
+            D = int(a or 6)
+            r = mech_gb.DIE_EJECTOR_PIN.get(D)
+            if r:
+                print(f"压铸模推杆 GB/T 4678.11 D={D} -> D1={r[0]} 可选L={r[1]} h={r[2]} | "
+                      f"材料{mech_gb.DIE_EJECTOR_MATERIAL} 硬度{mech_gb.DIE_EJECTOR_HARDNESS}")
+            else:
+                print(f"无 D={D} 的推杆数据")
+        elif args.kind == "atlas":
+            r = env_atlas.atlas_for(a or "化粪池")
+            print(f"环保图集 [{a or '化粪池'}]: {r[0]} {r[1]} — {r[2]}")
+        elif args.kind == "pipe-atlas":
+            print(f"塑料给水管 {a or 'PVC-U'} 图集: {env_atlas.PLASTIC_PIPE_ATLAS.get(a or 'PVC-U', '未知')}")
+        elif args.kind == "hvac-sample":
+            r = hvac_extra.sample_category(a or "水泵")
+            print(f"暖通样本 [{a or '水泵'}]: {r[0]} — {r[1]}")
+        elif args.kind == "hvac-note":
+            print(f"暖通出图提示 [{a or '冷却塔'}]: {hvac_extra.drawing_note(a or '冷却塔')}")
+        return 0
 
     else:
         ap.print_help()
