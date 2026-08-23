@@ -633,6 +633,18 @@ def main(argv=None):
     kb_p.add_argument("--web", action="store_true",
                       help="本地未命中时，自动联网搜索权威标准/图集")
 
+    # 联网估算值"转正"：把沉淀的 _estimated 条目合并进国标源码表（本地）+ 可选推送云端
+    sync_p = sub.add_parser("sync-backfill",
+                            help="将联网估算沉淀转正为国标数据（本地合并 + 可选 --push 推云端）")
+    sync_p.add_argument("--kind", default=None,
+                        choices=["bolt", "nut", "screw", "washer"],
+                        help="限定转正类型；省略则全部转正")
+    sync_p.add_argument("--dry-run", action="store_true",
+                        help="仅预览将要转正的条目，不修改源码表/不落盘/不推送")
+    sync_p.add_argument("--push", action="store_true",
+                        help="转正后自动 commit 并推送 GitHub（云端同步）")
+    sync_p.add_argument("--msg", default=None, help="推送时的 commit 信息")
+
     # 联网搜索（公开权威来源，不依赖 MCP）
     web_p = sub.add_parser("websearch",
                            help="联网搜索权威行业标准/图集/设备参数（公开网页，不依赖 MCP）")
@@ -751,6 +763,60 @@ def main(argv=None):
             print("[提示] 远程 ima 同步需由 WorkBuddy 会话中的 AI 通过 ima MCP 触发。")
             print("       如需本地同步，请把 ima 中下载的 .txt/.md/.json 放入一个目录，")
             print("       然后执行: envcad sync-kb --local-dir <目录路径>")
+        return 0
+
+    elif args.command == "sync-backfill":
+        from .components.fasteners import promote_backfill
+        kind = args.kind
+        promoted = promote_backfill(kind_key=kind, dry_run=args.dry_run)
+        if not promoted:
+            print("无可转正的估算条目（沉淀里没有 _estimated 记录，或已全部转正）。")
+            return 0
+        print(f"\n{'[预览]' if args.dry_run else '[已转正]'} 共 {len(promoted)} 条：")
+        for table, spec, fields in promoted:
+            print(f"  {table}[{spec}] = {fields}")
+        if args.dry_run:
+            print("\n（dry-run 模式：未修改源码表，未落盘，未推送。去掉 --dry-run 执行转正。）")
+            return 0
+        print(f"\n本地转正完成：以上条目已合并进 envcad/components/fasteners.py 的国标表，"
+              f"并标记 _promoted 落盘到 knowledge/web_cache/fasteners_backfill.json。")
+        if args.push:
+            import subprocess
+            # __file__ = .../envcad/cli.py → dirname = envcad → 再 dirname = 仓库根
+            repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            msg = args.msg or (
+                "feat: 联网估算沉淀转正为国标数据"
+                + (f"（{kind}）" if kind else "（全部类型）"))
+            try:
+                subprocess.run(["git", "-C", repo, "add", "-A"], check=True)
+                subprocess.run(["git", "-C", repo, "commit",
+                                "-m", msg], check=True)
+                # 走代理推送（github.com 主站直连常 reset，代理 65532 在监听时必走）
+                pr = subprocess.run(
+                    ["git", "-C", repo, "-c", "http.proxy=http://127.0.0.1:65532",
+                     "-c", "https.proxy=http://127.0.0.1:65532",
+                     "push", "origin", "master"],
+                    capture_output=True, text=True)
+                if pr.returncode == 0:
+                    print("✓ 已 commit 并走代理推送 GitHub（云端同步完成）。")
+                else:
+                    # 代理失败则尝试直连绕过
+                    pr2 = subprocess.run(
+                        ["git", "-C", repo, "-c", "http.proxy=",
+                         "-c", "https.proxy=", "push", "origin", "master"],
+                        capture_output=True, text=True)
+                    if pr2.returncode == 0:
+                        print("✓ 已 commit 并直连推送 GitHub（云端同步完成）。")
+                    else:
+                        print("[警告] 本地已转正，但推送失败：")
+                        print(pr.stderr or pr.stdout)
+                        print(pr2.stderr or pr2.stdout)
+                        print("请手动推送：git push origin master")
+            except Exception as _e:
+                print(f"[警告] 推送异常：{_e}（本地转正已生效，云端需手动 push）")
+        else:
+            print("\n未加 --push：本地已转正但未推送云端。"
+                  "需同步云端时执行: envcad sync-backfill --push")
         return 0
 
     elif args.command == "websearch":

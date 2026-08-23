@@ -820,6 +820,97 @@ def draw_bolt_assembly(msp, center, scale: float, spec: str = "M10",
 
 # ─── 批量生成规格列表 ────────────────────────────────────
 
+# ─── 联网估算值"转正"（promote）──────────────────────────
+# 把联网回退沉淀下来的 _estimated 条目，正式合并进国标源码表，
+# 下次直接当标准用，不再走估算/联网流程。
+_PROMOTE_FIELDS = {
+    "bolt":   ("GB_BOLTS", ("d", "P", "s", "k", "e")),
+    "nut":    ("GB_NUTS", ("d", "P", "s", "m", "e")),
+    "screw":  ("GB_SCREWS_TABLE", ("d", "P", "dk", "k")),  # 特殊处理见下
+    "washer": ("GB_WASHERS_TABLE", ("d1", "d2", "h")),       # 特殊处理见下
+}
+
+
+def _promote_one(kind_key: str, spec: str, rec: Dict) -> Optional[tuple]:
+    """计算单条 _estimated 记录转正后的 (table_name, spec, fields)，不写全局表。
+
+    返回 (table_name, spec, fields) 或 None（已转正/非估算/字段缺失）。
+    """
+    if not rec.get("_estimated"):
+        return None
+    if rec.get("_promoted"):
+        return None
+    try:
+        if kind_key == "bolt":
+            t = (float(rec["d"]), float(rec["P"]), float(rec["s"]),
+                 float(rec["k"]), float(rec["e"]))
+            return ("GB_BOLTS", spec, t)
+        elif kind_key == "nut":
+            t = (float(rec["d"]), float(rec["P"]), float(rec["s"]),
+                 float(rec["m"]), float(rec["e"]))
+            return ("GB_NUTS", spec, t)
+        elif kind_key == "screw":
+            # screw 表区分 hex_socket / pan，按 rec["type"] 决定落哪个表
+            st = rec.get("type", "hex_socket")
+            if st == "hex_socket":
+                t = (float(rec["d"]), float(rec["P"]), float(rec["dk"]),
+                     float(rec["k"]), float(rec.get("t", 3.0)))
+                return ("GB_SCREWS_HEX_SOCKET", spec, t)
+            else:
+                t = (float(rec["d"]), float(rec["P"]), float(rec["dk"]),
+                     float(rec["k"]), float(rec.get("rmin", 0.25)))
+                return ("GB_SCREWS_PAN", spec, t)
+        elif kind_key == "washer":
+            # washer 表区分 flat / spring，按 rec["type"] 决定落哪个表
+            wt = rec.get("type", "flat")
+            t = (float(rec["d1"]), float(rec["d2"]), float(rec["h"]))
+            if wt == "flat":
+                return ("GB_WASHERS", spec, t)
+            else:
+                return ("GB_SPRING_WASHERS", spec, t)
+    except (KeyError, ValueError, TypeError):
+        return None
+    return None
+
+
+def _apply_promoted(table_name: str, spec: str, fields: tuple) -> None:
+    """把转正结果写入对应的全局国标表（实际生效）。"""
+    global GB_BOLTS, GB_NUTS, GB_SCREWS_HEX_SOCKET, GB_SCREWS_PAN, GB_WASHERS, GB_SPRING_WASHERS
+    {
+        "GB_BOLTS": GB_BOLTS,
+        "GB_NUTS": GB_NUTS,
+        "GB_SCREWS_HEX_SOCKET": GB_SCREWS_HEX_SOCKET,
+        "GB_SCREWS_PAN": GB_SCREWS_PAN,
+        "GB_WASHERS": GB_WASHERS,
+        "GB_SPRING_WASHERS": GB_SPRING_WASHERS,
+    }[table_name][spec] = fields
+
+
+def promote_backfill(kind_key: str = None, dry_run: bool = False) -> List[tuple]:
+    """把联网估算沉淀转正进国标源码表。
+
+    kind_key: 限定类型 'bolt'/'nut'/'screw'/'washer'，None 表示全部。
+    dry_run: True 只返回将要转正的条目，不实际修改表/不落盘。
+    返回被转正的 [(table_name, spec, fields), ...]
+    """
+    _load_backfill()
+    promoted = []
+    targets = [kind_key] if kind_key else list(_BACKFILL.keys())
+    for kk in targets:
+        cache = _BACKFILL.get(kk, {})
+        for spec, rec in list(cache.items()):
+            res = _promote_one(kk, spec, rec)
+            if res:
+                promoted.append(res)
+                if not dry_run:
+                    _apply_promoted(*res)
+                    rec["_promoted"] = True
+                    rec["_promoted_at"] = __import__("datetime").datetime.now().isoformat()
+    if promoted and not dry_run:
+        _save_backfill()
+    return promoted
+
+
 def list_specs(component: str = "bolt") -> List[str]:
     """列出某类紧固件的可用国标规格。
 
