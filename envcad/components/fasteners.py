@@ -117,11 +117,51 @@ GB_SPRING_WASHERS = {
 }
 
 
-def _web_lookup_fallback(spec: str, kind_zh: str, std_guess: str) -> Dict:
-    """本地未收录规格时的联网回退：不报错，检索权威尺寸出处并给工程估算值。
+# ─── 联网回退累积缓存（运行时 + 落盘）─────────────────────
+# 结构: { 'bolt': {spec: params}, 'nut': {...}, 'screw': {...}, 'washer': {...} }
+_BACKFILL_PATH = __import__("os").path.join(
+    __import__("os").path.dirname(__import__("os").path.dirname(__file__)),
+    "knowledge", "web_cache", "fasteners_backfill.json")
 
-    返回 dict 含 _estimated=True 与 _refs（权威链接），调用方据此提示用户。
+_BACKFILL: Dict[str, Dict[str, Dict]] = {}
+
+
+def _load_backfill() -> None:
+    """启动时加载已沉淀的联网结果（仅执行一次）。"""
+    import os, json
+    if _BACKFILL:
+        return
+    if os.path.exists(_BACKFILL_PATH):
+        try:
+            with open(_BACKFILL_PATH, "r", encoding="utf-8") as f:
+                _BACKFILL.update(json.load(f))
+        except Exception:
+            pass
+
+
+def _save_backfill() -> None:
+    """把累积结果落盘，供下次启动复用。"""
+    import os, json
+    try:
+        os.makedirs(os.path.dirname(_BACKFILL_PATH), exist_ok=True)
+        with open(_BACKFILL_PATH, "w", encoding="utf-8") as f:
+            json.dump(_BACKFILL, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+
+def _web_lookup_fallback(spec: str, kind_zh: str, std_guess: str, kind_key: str) -> Dict:
+    """本地未收录规格时的联网回退：不报错，检索权威尺寸并沉淀。
+
+    流程：先查本地落盘缓存 → 命中直接返回；否则联网检索，写入运行时表 + 落盘。
+    返回 dict 含 _estimated=True 与 _refs（权威链接）。
     """
+    _load_backfill()
+    cache = _BACKFILL.setdefault(kind_key, {})
+    if spec in cache:
+        rec = dict(cache[spec])
+        rec["_from_cache"] = True
+        return rec
     try:
         from .engine_web_bridge import search_web
         q = f"{std_guess} {spec} 尺寸"
@@ -130,7 +170,7 @@ def _web_lookup_fallback(spec: str, kind_zh: str, std_guess: str) -> Dict:
         results = []
     m = re.search(r"(\d+(?:\.\d+)?)", spec)
     d = float(m.group(1)) if m else 10.0
-    return {
+    rec = {
         "d": d, "P": round(d * 0.15, 2), "s": round(d * 1.6, 1),
         "k": round(d * 0.6, 1), "e": round(d * 1.8, 2),
         "d1": round(d * 1.1, 1), "d2": round(d * 2.0, 1), "h": round(d * 0.2, 1),
@@ -138,6 +178,9 @@ def _web_lookup_fallback(spec: str, kind_zh: str, std_guess: str) -> Dict:
         "_note": f"本地未收录 {kind_zh} {spec}，已联网检索权威出处供参考（数值为估算，以标准为准）",
         "_refs": [{"title": h["title"], "url": h["url"]} for h in results[:3]],
     }
+    cache[spec] = rec
+    _save_backfill()
+    return rec
 
 
 def get_bolt_params(spec: str, length: float = 30.0,
@@ -152,7 +195,7 @@ def get_bolt_params(spec: str, length: float = 30.0,
         p.update(custom)
     else:
         if spec not in GB_BOLTS:
-            fb = _web_lookup_fallback(spec, "螺栓", "GB/T 5782")
+            fb = _web_lookup_fallback(spec, "螺栓", "GB/T 5782", "bolt")
             fb["L"] = length
             return fb
         d, P, s, k, e = GB_BOLTS[spec]
@@ -175,7 +218,7 @@ def get_nut_params(spec: str, custom: Optional[Dict] = None) -> Dict:
         p.update(custom)
     else:
         if spec not in GB_NUTS:
-            return _web_lookup_fallback(spec, "螺母", "GB/T 6170")
+            return _web_lookup_fallback(spec, "螺母", "GB/T 6170", "nut")
         d, P, s, m, e = GB_NUTS[spec]
         p = {"d": d, "P": P, "s": s, "m": m, "e": e}
     return p
@@ -195,7 +238,7 @@ def get_screw_params(spec: str, screw_type: str = "hex_socket",
         p.update(custom)
     else:
         if spec not in table:
-            fb = _web_lookup_fallback(spec, "螺钉", "GB/T 70.1")
+            fb = _web_lookup_fallback(spec, "螺钉", "GB/T 70.1", "screw")
             fb["L"] = length
             fb["type"] = screw_type
             fb["b"] = min(length, max(2 * fb["d"], 12))
@@ -223,7 +266,7 @@ def get_washer_params(spec: str, washer_type: str = "flat",
         p.update(custom)
     else:
         if spec not in table:
-            fb = _web_lookup_fallback(spec, "垫圈", "GB/T 97.1")
+            fb = _web_lookup_fallback(spec, "垫圈", "GB/T 97.1", "washer")
             fb["type"] = washer_type
             return fb
         d1, d2, h = table[spec]
