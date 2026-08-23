@@ -539,3 +539,162 @@ def design_fan_full(air_flow: float = 50000.0, pressure: float = 2500.0,
               f"轴功率{N_shaft:.1f}kW，配电机{N_rated}kW；"
               f"进出口Φ{inlet_dn:.0f}mm，外形{L:.0f}×{W:.0f}×{H:.0f}mm"),
     )
+
+
+def design_rto_full(air_flow: float = 20000.0,
+                    voc_in: float = 1000.0,
+                    eff: float = None,
+                    n_chamber: int = 3,
+                    bed_thk: float = 1.2,
+                    v_face: float = 1.2,
+                    temp: float = 800.0) -> dict:
+    """RTO 蓄热式焚烧炉全参数设计（VOC 治理）。
+
+    输入提示词可给的条件：
+        air_flow   废气量 (m³/h)，默认 20000
+        voc_in     入口 VOC 浓度 (mg/m³)，默认 1000
+        eff        净化效率，缺省 0.98
+        n_chamber  蓄热室数量（2/3室），默认 3
+        bed_thk    蓄热床厚度 (m)，默认 1.2
+        v_face     床面气速 (m/s)，默认 1.2
+        temp       焚烧温度 (℃)，默认 800（≥760 才能分解 VOC）
+
+    返回：单室截面积→炉径→蓄热体体积→焚烧室→进出口→换热→达标判定。
+    主尺寸 m，管口 mm。
+    """
+    eff = 0.98 if eff is None else eff
+    Q_s = air_flow / 3600.0                          # m³/s
+    # 单室面积（n_chamber 室中只有 n_chamber-1 室处于进气/出气，*0.5 折算）
+    A_chamber = Q_s / v_face / max(1, (n_chamber - 1) * 0.5)
+    D = math.sqrt(4.0 * A_chamber / math.pi)
+    D = math.ceil(D * 2.0) / 2.0                     # 上取整 0.5m
+    A_real = math.pi * D * D / 4.0
+    v_real = Q_s / (A_real * max(1, (n_chamber - 1) * 0.5))
+    V_bed = A_real * bed_thk * n_chamber             # m³ 总蓄热体
+
+    # 焚烧室（停留时间 ~1s，按焚烧温度校核）
+    H_combust = max(2.0, temp / 400.0)               # m 粗略随温度增高
+    # 进出口烟道（烟速 12 m/s）
+    v_duct = 12.0
+    inlet_dn = math.ceil(math.sqrt(Q_s / v_duct) * 1000.0 / 50.0) * 50.0
+    outlet_dn = inlet_dn
+
+    voc_out = voc_in * (1 - eff)
+    limit = env_data.AIR_GB16297.get("非甲烷总烃", dict(conc=120))["conc"]
+    temp_ok = temp >= 760.0                          # 分解温度阈值
+    return dict(
+        air_flow=air_flow, voc_in=voc_in, eff=eff,
+        n_chamber=n_chamber, bed_thk=bed_thk, v_face=v_face,
+        D=D, A_chamber=round(A_real, 1), v_face_real=round(v_real, 2),
+        V_bed=round(V_bed, 1), H_combust=round(H_combust, 1),
+        temp=temp, temp_ok=temp_ok,
+        inlet_dn=inlet_dn, outlet_dn=outlet_dn,
+        voc_out=round(voc_out, 1), limit=limit, ok=(voc_out <= limit and temp_ok),
+        note=(f"RTO：废气{air_flow}m³/h，VOC {voc_in}→{voc_out:.0f}mg/m³；"
+              f"{n_chamber}室，炉径Φ{D:.1f}m，蓄热床{V_bed:.1f}m³，"
+              f"焚烧温度{temp}℃（{'≥760℃达标' if temp_ok else '不足，需提高'}）；"
+              f"{'排放达标' if voc_out<=limit else '超标'}"),
+    )
+
+
+def design_scr_full(air_flow: float = 200000.0,
+                    nox_in: float = 400.0,
+                    eff: float = None,
+                    v_face: float = 0.5,
+                    area_vel: float = None,
+                    n_layer: int = 2) -> dict:
+    """SCR 选择性催化还原脱硝反应器全参数设计。
+
+    输入提示词可给的条件：
+        air_flow   烟气量 (m³/h)，默认 200000（电站/锅炉量级）
+        nox_in     入口 NOx 浓度 (mg/m³)，默认 400
+        eff        脱硝效率，缺省 0.80（催化剂层设计值）
+        v_face     催化剂表面气速 (m/s)，默认 0.5
+        n_layer    催化剂层数，默认 2
+        area_vel   空塔气速(m/s)，缺省按 v_face
+
+    返回：反应器截面积→边长→催化剂体积→层高→压降→喷氨→达标判定。
+    主尺寸 m，管口 mm。
+    """
+    eff = 0.80 if eff is None else eff
+    Q_s = air_flow / 3600.0
+    A_reactor = Q_s / v_face                        # m² 总截面积
+    side = math.sqrt(A_reactor)                     # m 方形边长
+    side = math.ceil(side * 2.0) / 2.0
+    A_real = side * side
+    v_real = Q_s / A_real
+    # 催化剂层（单层层高 ~1.0m，含支撑）
+    H_layer = 1.0
+    H_cat = n_layer * H_layer
+    H_free = 2.0                                    # 进出口均流段
+    H_total = H_cat + H_free
+    V_cat = A_real * H_cat                          # m³ 催化剂体积
+    dp = 200.0 * n_layer                            # 每层约 200Pa 阻力
+
+    nox_out = nox_in * (1 - eff)
+    limit = env_data.AIR_GB16297.get("NOx", dict(conc=240))["conc"]
+    # 喷氨（NH3/NOx 摩尔比 ~0.95）
+    nh3_ratio = 0.95
+    nh3_q = air_flow * nox_in / 1e6 * nh3_ratio * 17.0 / 30.0 * 1000.0 / 1000.0  # kg/h 粗估
+    return dict(
+        air_flow=air_flow, nox_in=nox_in, eff=eff,
+        v_face=v_face, n_layer=n_layer,
+        side=side, A_reactor=round(A_real, 1), v_real=round(v_real, 2),
+        H_cat=round(H_cat, 1), H_total=round(H_total, 1),
+        V_cat=round(V_cat, 1), dp=round(dp, 0),
+        nh3_q=round(nh3_q, 1),
+        nox_out=round(nox_out, 1), limit=limit, ok=(nox_out <= limit),
+        note=(f"SCR：烟气{air_flow}m³/h，NOx {nox_in}→{nox_out:.0f}mg/m³；"
+              f"反应器{side:.1f}×{side:.1f}m，{n_layer}层催化剂（{V_cat:.1f}m³），"
+              f"阻力{dp:.0f}Pa，脱硝效率{eff*100:.0f}%；"
+              f"{'达标' if nox_out<=limit else '超标'}"),
+    )
+
+
+def design_incinerator_full(Q: float = 300.0,
+                            lhv: float = 6500.0,
+                            eff: float = None,
+                            temp_min: float = 850.0,
+                            t_res: float = 2.0) -> dict:
+    """生活垃圾焚烧炉全参数设计（回转窑/机械炉排）。
+
+    输入提示词可给的条件：
+        Q       处理量 (t/d)，默认 300
+        lhv     低位热值 (kJ/kg)，默认 6500（中国生活垃圾典型值）
+        eff     燃烧效率，缺省 0.99
+        temp_min 炉膛温度下限(℃)，默认 850（GB 18485 要求≥850）
+        t_res   烟气停留时间(s)，默认 2.0（GB 18485 要求≥2s）
+
+    返回：炉排面积/回转窑规格→一燃室→二燃室→余热锅→达标判定（GB 18485）。
+    主尺寸 m。
+    """
+    eff = 0.99 if eff is None else eff
+    # 炉排面积（机械炉排，负荷 ~700 kg/m²·h）
+    load_rate = 700.0                               # kg/m²·h
+    A_grate = Q * 1000.0 / 24.0 / load_rate         # m²
+    # 回转窑（按处理量估算窑径，经验 D≈0.12·Q^0.4）
+    D_kiln = 0.12 * (Q ** 0.4)
+    D_kiln = round(math.ceil(D_kiln * 2.0) / 2.0, 1)
+    L_kiln = D_kiln * 10.0                          # 窑长径比 ~10
+    # 二燃室（停留≥2s，850℃，容积热强度校核）
+    Q_s = (Q * 1000.0 / 24.0 / 3600.0) * lhv / 1000.0  # MW 热输入
+    # 余热锅炉蒸发量（~0.6 t蒸汽/t垃圾）
+    steam_rate = 0.6
+    steam = Q * steam_rate
+
+    # 排放限值（GB 18485）
+    _g = env_data.INCINERATION_GB18485
+    temp_ok = temp_min >= 850.0
+    tres_ok = t_res >= 2.0
+    return dict(
+        Q=Q, lhv=lhv, eff=eff,
+        A_grate=round(A_grate, 1), D_kiln=D_kiln, L_kiln=round(L_kiln, 1),
+        Q_thermal=round(Q_s, 2), steam=round(steam, 0),
+        temp_min=temp_min, t_res=t_res,
+        temp_ok=temp_ok, tres_ok=tres_ok,
+        dioxin_limit=_g["二噁英"]["day"],
+        note=(f"焚烧炉：处理量{Q}t/d，热值{lhv}kJ/kg；炉排面积{A_grate:.1f}m²，"
+              f"回转窑Φ{D_kiln:.1f}×{L_kiln:.1f}m；余热{Q_s:.1f}MW，"
+              f"产汽{steam:.0f}t/d；炉膛{temp_min}℃/停留{t_res}s"
+              f"（{'满足' if temp_ok and tres_ok else '不满足'}GB 18485 ≥850℃·≥2s）"),
+    )

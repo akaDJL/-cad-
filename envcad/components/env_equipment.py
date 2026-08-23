@@ -855,6 +855,275 @@ def draw_bar_screen(msp, origin, scale: float = 100.0,
 
 
 # ══════════════════════════════════════════════════════════
+#  风机 / 刮泥机 / 脱水机 / UV消毒 / 计量泵
+# ══════════════════════════════════════════════════════════
+
+def draw_centrifugal_fan(msp, origin, scale: float = 100.0,
+                          kind: str = "centrifugal",
+                          dn: float = 500.0,
+                          label: str = "",
+                          layer: str = "设备",
+                          tracker=None):
+    """离心风机（环保除尘/通风常用）。
+
+    kind: "centrifugal" 离心 / "roots" 罗茨（卧式，带进出口与电机）
+    绘制内容：蜗壳、叶轮、进风口、出风口、电机、底座
+    """
+    s = scale
+    ox, oy = origin
+    body_w = 14 * s
+    body_h = 14 * s
+    cx, cy = ox + body_w / 2, oy + body_h / 2
+
+    # 蜗壳（外轮廓近似圆 + 出口蜗舌）
+    _circle(msp, (cx, cy), body_w * 0.45, layer)
+    # 叶轮（内圆 + 叶片）
+    _circle(msp, (cx, cy), body_w * 0.28, "细实线")
+    for i in range(8):
+        ang = i * 45
+        rad = math.radians(ang)
+        bx = cx + body_w * 0.28 * math.cos(rad)
+        by = cy + body_w * 0.28 * math.sin(rad)
+        tx = cx + body_w * 0.40 * math.cos(rad + 0.5)
+        ty = cy + body_w * 0.40 * math.sin(rad + 0.5)
+        _line(msp, (bx, by), (tx, ty), layer)
+    # 进风口（轴向，左侧）
+    _circle(msp, (ox - 2 * s, cy), 3 * s, layer)
+    _line(msp, (ox - 2 * s, cy - 3 * s), (ox - 2 * s, cy + 3 * s), layer)
+    # 出风口（上侧，矩形）
+    _poly(msp, [(cx - 3 * s, oy + body_h),
+                (cx + 3 * s, oy + body_h),
+                (cx + 3 * s, oy + body_h + 4 * s),
+                (cx - 3 * s, oy + body_h + 4 * s)], layer)
+    # 电机（右侧）
+    mx = ox + body_w + 2 * s
+    _poly(msp, [(mx, cy - 3 * s), (mx + 6 * s, cy - 3 * s),
+                (mx + 6 * s, cy + 3 * s), (mx, cy + 3 * s)], layer)
+    for i in range(4):
+        yy = cy - 3 * s + (i + 1) * 6 * s / 5
+        _line(msp, (mx, yy), (mx + 6 * s, yy), "细实线")
+    # 底座
+    _poly(msp, [(ox - 4 * s, oy - 2 * s),
+                (ox + body_w + 10 * s, oy - 2 * s),
+                (ox + body_w + 10 * s, oy),
+                (ox - 4 * s, oy)], layer)
+
+    if label:
+        _t(msp, label, (cx, oy - 6 * s), 2.5 * s,
+           align=TextEntityAlignment.MIDDLE_CENTER, layer="文字",
+           tracker=tracker)
+    if tracker:
+        tracker.register(ox - 5 * s, oy - 8 * s,
+                         ox + body_w + 12 * s, oy + body_h + 6 * s, margin=50)
+    return (ox + body_w + 12 * s, oy + body_h + 4 * s)
+
+
+def draw_scraper(msp, center, scale: float = 100.0,
+                 tank_d: float = 16000.0,
+                 arm_type: str = "bridge",
+                 label: str = "",
+                 layer: str = "设备",
+                 tracker=None):
+    """刮泥机（二沉池/初沉池，中心传动或周边传动）。
+
+    arm_type: "bridge" 周边传动（桁架桥 + 刮板）/ "center" 中心传动（立轴 + 双臂）
+    tank_d: 池直径 mm（仅用于相对比例示意，不按比例精确绘制池体）
+    绘制内容：回转桁架/中心立轴、刮板、驱动、集泥坑
+    """
+    s = scale
+    cx, cy = center
+    R = 10 * s  # 示意半径
+
+    if arm_type == "bridge":
+        # 周边传动：横跨池径的桁架桥
+        _poly(msp, [(cx - R, cy - 1.5 * s), (cx + R, cy - 1.5 * s),
+                    (cx + R, cy + 1.5 * s), (cx - R, cy + 1.5 * s)], layer)
+        # 桁架斜撑
+        for i in range(int(2 * R / (3 * s))):
+            x = cx - R + (i + 0.5) * 3 * s
+            _line(msp, (x, cy - 1.5 * s), (x + 1.5 * s, cy + 1.5 * s), "细实线")
+        # 行走轮（两端）
+        for px in [cx - R, cx + R]:
+            _circle(msp, (px, cy + 2.5 * s), 1.2 * s, layer)
+        # 中心驱动
+        _circle(msp, (cx, cy), 1.8 * s, layer)
+        # 刮板（沿桥垂直向下，示意）
+        _line(msp, (cx - R * 0.5, cy + 1.5 * s), (cx - R * 0.5, cy + 4 * s), layer)
+        _line(msp, (cx + R * 0.5, cy + 1.5 * s), (cx + R * 0.5, cy + 4 * s), layer)
+    else:
+        # 中心传动：立轴 + 双臂
+        _line(msp, (cx, cy - 3 * s), (cx, cy + R), layer)  # 立轴
+        for ang in [30, 150]:
+            rad = math.radians(ang)
+            ex, ey = cx + R * math.cos(rad), cy + R * math.sin(rad)
+            _line(msp, (cx, cy), (ex, ey), layer)
+            _line(msp, (ex, ey), (ex, ey + 2 * s), layer)  # 刮板
+        _circle(msp, (cx, cy), 2 * s, layer)
+        # 中心驱动平台
+        _poly(msp, [(cx - 3 * s, cy - 6 * s), (cx + 3 * s, cy - 6 * s),
+                    (cx + 3 * s, cy - 3 * s), (cx - 3 * s, cy - 3 * s)], layer)
+    # 集泥坑（中心）
+    _circle(msp, (cx, cy), 0.8 * s, "细实线")
+
+    if label:
+        _t(msp, label, (cx, cy - 9 * s), 2.5 * s,
+           align=TextEntityAlignment.MIDDLE_CENTER, layer="文字",
+           tracker=tracker)
+    if tracker:
+        tracker.register(cx - R - 5 * s, cy - 9 * s,
+                         cx + R + 5 * s, cy + R + 5 * s, margin=50)
+    return (cx + R + 3 * s, cy + R + 3 * s)
+
+
+def draw_belt_press(msp, origin, scale: float = 100.0,
+                    label: str = "",
+                    layer: str = "设备",
+                    tracker=None):
+    """带式污泥脱水机。
+
+    绘制内容：重力脱水段（上层滤网）+ 压榨段（S形辊压）+ 大辊+小辊+机架+加药口
+    """
+    s = scale
+    ox, oy = origin
+    total_w = 30 * s
+    frame_h = 10 * s
+
+    # 机架
+    _poly(msp, [(ox, oy), (ox + total_w, oy),
+                (ox + total_w, oy + frame_h), (ox, oy + frame_h)], layer)
+    # 上滤网（重力脱水段，左侧水平）
+    _line(msp, (ox + 2 * s, oy + frame_h * 0.7),
+          (ox + 14 * s, oy + frame_h * 0.7), "细实线")
+    # 压榨段（S形辊压，右侧）
+    n_roll = 5
+    for i in range(n_roll):
+        rx = ox + 16 * s + i * 2.5 * s
+        ry = oy + frame_h * (0.35 if i % 2 == 0 else 0.65)
+        _circle(msp, (rx, ry), 1.5 * s, layer)
+    # 大驱动辊（两端）
+    _circle(msp, (ox + 2 * s, oy + frame_h * 0.7), 2 * s, layer)
+    _circle(msp, (ox + total_w - 2 * s, oy + frame_h * 0.5), 2 * s, layer)
+    # 加药口（左上）
+    _poly(msp, [(ox + 2 * s, oy + frame_h), (ox + 5 * s, oy + frame_h),
+                (ox + 5 * s, oy + frame_h + 3 * s), (ox + 2 * s, oy + frame_h + 3 * s)],
+              "细实线")
+    # 泥饼出口（右下）
+    _line(msp, (ox + total_w - 2 * s, oy + frame_h * 0.5),
+          (ox + total_w + 3 * s, oy + frame_h * 0.5), layer)
+    # 滤液出口（底部）
+    _line(msp, (ox + 8 * s, oy), (ox + 8 * s, oy - 3 * s), "管道-污水")
+
+    if label:
+        _t(msp, label, (ox + total_w / 2, oy - 4 * s), 2.5 * s,
+           align=TextEntityAlignment.MIDDLE_CENTER, layer="文字-标题",
+           tracker=tracker)
+    if tracker:
+        tracker.register(ox - 3 * s, oy - 6 * s,
+                         ox + total_w + 5 * s, oy + frame_h + 4 * s, margin=50)
+    return (ox + total_w + 4 * s, oy + frame_h + 3 * s)
+
+
+def draw_uv_disinfection(msp, origin, scale: float = 100.0,
+                          n_modules: int = 3,
+                          label: str = "",
+                          layer: str = "设备",
+                          tracker=None):
+    """紫外线消毒器（明渠式 UV 消毒，污水厂尾水常用）。
+
+    绘制内容：消毒渠 + n 个 UV 模块（灯管阵列）+ 检修平台 + 出水
+    """
+    s = scale
+    ox, oy = origin
+    chan_w = 16 * s
+    chan_h = 6 * s
+    module_w = 4 * s
+
+    # 消毒渠
+    _poly(msp, [(ox, oy), (ox + chan_w, oy),
+                (ox + chan_w, oy + chan_h), (ox, oy + chan_h)], layer)
+    # UV 模块（每个模块画灯管阵列）
+    for i in range(n_modules):
+        mx = ox + 2 * s + i * (module_w + 1 * s)
+        # 模块框
+        _poly(msp, [(mx, oy + 1 * s), (mx + module_w, oy + 1 * s),
+                    (mx + module_w, oy + chan_h - 1 * s),
+                    (mx, oy + chan_h - 1 * s)], "细实线")
+        # 灯管（横向）
+        for j in range(3):
+            ly = oy + 1.5 * s + j * (chan_h - 3 * s) / 3
+            _line(msp, (mx + 0.5 * s, ly), (mx + module_w - 0.5 * s, ly), "细实线")
+    # 进出水口
+    _line(msp, (ox, oy + chan_h / 2), (ox - 3 * s, oy + chan_h / 2), "管道-污水")
+    _line(msp, (ox + chan_w, oy + chan_h / 2),
+          (ox + chan_w + 3 * s, oy + chan_h / 2), "管道-污水")
+    # 检修平台
+    _poly(msp, [(ox, oy + chan_h), (ox + chan_w, oy + chan_h),
+                (ox + chan_w, oy + chan_h + 1.5 * s), (ox, oy + chan_h + 1.5 * s)],
+              "细实线")
+
+    if label:
+        _t(msp, label, (ox + chan_w / 2, oy - 4 * s), 2.5 * s,
+           align=TextEntityAlignment.MIDDLE_CENTER, layer="文字-标题",
+           tracker=tracker)
+    if tracker:
+        tracker.register(ox - 4 * s, oy - 6 * s,
+                         ox + chan_w + 4 * s, oy + chan_h + 4 * s, margin=50)
+    return (ox + chan_w + 3 * s, oy + chan_h + 3 * s)
+
+
+def draw_metering_pump(msp, origin, scale: float = 100.0,
+                        pump_type: str = "diaphragm",
+                        label: str = "",
+                        layer: str = "设备",
+                        tracker=None):
+    """计量泵（加药间核心设备，隔膜式/柱塞式）。
+
+    pump_type: "diaphragm" 隔膜 / "plunger" 柱塞
+    绘制内容：泵头 + 隔膜/柱塞 + 蜗轮蜗杆减速机构 + 电机 + 进出口阀
+    """
+    s = scale
+    ox, oy = origin
+    body_w = 8 * s
+    body_h = 10 * s
+
+    # 泵头（中间块）
+    _poly(msp, [(ox, oy), (ox + body_w, oy),
+                (ox + body_w, oy + body_h), (ox, oy + body_h)], layer)
+    # 隔膜/柱塞（顶部）
+    if pump_type == "diaphragm":
+        _circle(msp, (ox + body_w / 2, oy + body_h), 2 * s, "细实线")
+    else:
+        _line(msp, (ox + body_w / 2, oy + body_h),
+              (ox + body_w / 2, oy + body_h + 3 * s), layer)
+    # 蜗轮蜗杆减速机构
+    reduc_y = oy + body_h + (3 * s if pump_type == "plunger" else 2 * s)
+    _poly(msp, [(ox + body_w / 2 - 2 * s, reduc_y),
+                (ox + body_w / 2 + 2 * s, reduc_y),
+                (ox + body_w / 2 + 2 * s, reduc_y + 3 * s),
+                (ox + body_w / 2 - 2 * s, reduc_y + 3 * s)], layer)
+    # 电机
+    _poly(msp, [(ox + body_w / 2 - 1.5 * s, reduc_y + 3 * s),
+                (ox + body_w / 2 + 1.5 * s, reduc_y + 3 * s),
+                (ox + body_w / 2 + 1.5 * s, reduc_y + 6 * s),
+                (ox + body_w / 2 - 1.5 * s, reduc_y + 6 * s)], layer)
+    # 进出口阀（左下进、右出）
+    _line(msp, (ox - 2 * s, oy + 2 * s), (ox, oy + 2 * s), "管道-污水")
+    _circle(msp, (ox - 2 * s, oy + 2 * s), 0.6 * s, layer)
+    _line(msp, (ox + body_w, oy + 2 * s), (ox + body_w + 2 * s, oy + 2 * s),
+          "管道-污水")
+    _circle(msp, (ox + body_w + 2 * s, oy + 2 * s), 0.6 * s, layer)
+
+    if label:
+        _t(msp, label, (ox + body_w / 2, oy - 4 * s), 2.0 * s,
+           align=TextEntityAlignment.MIDDLE_CENTER, layer="文字",
+           tracker=tracker)
+    if tracker:
+        tracker.register(ox - 3 * s, oy - 6 * s,
+                         ox + body_w + 3 * s, reduc_y + 7 * s, margin=50)
+    return (ox + body_w + 2 * s, reduc_y + 6 * s)
+
+
+# ══════════════════════════════════════════════════════════
 #  设备图例表（快速生成图例页）
 # ══════════════════════════════════════════════════════════
 
@@ -874,4 +1143,11 @@ ENV_EQUIPMENT_LEGEND = [
     ("gate_weir", "可调式堰门", "B=800"),
     ("hoist", "侧摇式启闭机", "3t"),
     ("screen_mechanical", "机械格栅", "B=600 b=5mm"),
+    ("centrifugal_fan", "离心风机", "Q=50000m³/h"),
+    ("roots_blower", "罗茨风机", "Q=30m³/min"),
+    ("scraper_bridge", "周边传动刮泥机", "Φ32m"),
+    ("scraper_center", "中心传动刮泥机", "Φ16m"),
+    ("belt_press", "带式污泥脱水机", "DY-1000"),
+    ("uv_disinfection", "明渠式UV消毒器", "3模块"),
+    ("metering_pump", "隔膜计量泵", "JWM-200/0.5"),
 ]

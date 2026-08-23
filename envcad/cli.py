@@ -511,7 +511,8 @@ def main(argv=None):
                               help="工程验算（结构/土木/环保/机械 强度与稳定校核）")
     design_p.add_argument("kind", nargs="?", default="rc-beam",
                           choices=["rc-beam", "foundation", "retaining",
-                                   "wwtp", "dust", "gear", "shaft",
+                                   "wwtp", "dust", "rto", "scr", "incinerator",
+                                   "gear", "shaft",
                                    "load", "cable", "illum",
                                    "water", "supply", "drain",
                                    "cooling", "duct",
@@ -1536,6 +1537,29 @@ def _demo_design(out, kind, args):
                                          format_dust_result)
         r = design_dust_collector(args.air, kind=args.dust_kind)
         print(format_dust_result(r))
+
+    # ---- 环保：RTO 蓄热焚烧 ----
+    elif kind == "rto":
+        from .design.env_process import design_rto_full
+        r = design_rto_full(air_flow=args.air)
+        print("【RTO 蓄热式焚烧炉设计】")
+        print(r["note"])
+        print("达标结论：" + ("满足排放要求" if r["ok"] else "超标或焚烧温度不足，需调整"))
+
+    # ---- 环保：SCR 脱硝 ----
+    elif kind == "scr":
+        from .design.env_process import design_scr_full
+        r = design_scr_full(air_flow=args.air)
+        print("【SCR 脱硝反应器设计】")
+        print(r["note"])
+        print("达标结论：" + ("满足 NOx 限值" if r["ok"] else "NOx 超标，需提高脱硝效率/增加层数"))
+
+    # ---- 环保：焚烧炉 ----
+    elif kind == "incinerator":
+        from .design.env_process import design_incinerator_full
+        r = design_incinerator_full(Q=args.people if args.people else 300.0)
+        print("【生活垃圾焚烧炉设计】")
+        print(r["note"])
 
     # ---- 机械：齿轮 ----
     elif kind == "gear":
