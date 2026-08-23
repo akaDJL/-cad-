@@ -630,6 +630,16 @@ def main(argv=None):
                                         "sleeve", "mb", "septic", "discharge"],
                       help="查询类型")
     kb_p.add_argument("--arg", default=None, help="查询参数(如规格/M4/化粪池/水泵)")
+    kb_p.add_argument("--web", action="store_true",
+                      help="本地未命中时，自动联网搜索权威标准/图集")
+
+    # 联网搜索（公开权威来源，不依赖 MCP）
+    web_p = sub.add_parser("websearch",
+                           help="联网搜索权威行业标准/图集/设备参数（公开网页，不依赖 MCP）")
+    web_p.add_argument("query", help="搜索关键词，如 'GB/T 50268 给水排水管道'")
+    web_p.add_argument("--save", action="store_true", help="保存结果到 knowledge/web_cache/")
+    web_p.add_argument("--detail", action="store_true", help="抓取前3条正文摘要")
+    web_p.add_argument("--max", type=int, default=8, help="最大结果数")
 
     # 脱硫塔输入条件
     equip_p.add_argument("--so2", type=float, default=2000.0, help="[脱硫]入口SO2 mg/m³")
@@ -736,6 +746,11 @@ def main(argv=None):
             print("       然后执行: envcad sync-kb --local-dir <目录路径>")
         return 0
 
+    elif args.command == "websearch":
+        from .engine.web_search import web_search_cli
+        web_search_cli(args.query, save=args.save, detail=args.detail, max_n=args.max)
+        return 0
+
     elif args.command == "kb":
         from .knowledge import mech_gb, env_atlas, hvac_extra, env_equip_data
         a = args.arg
@@ -754,7 +769,7 @@ def main(argv=None):
                 print(f"压铸模推杆 GB/T 4678.11 D={D} -> D1={r[0]} 可选L={r[1]} h={r[2]} | "
                       f"材料{mech_gb.DIE_EJECTOR_MATERIAL} 硬度{mech_gb.DIE_EJECTOR_HARDNESS}")
             else:
-                print(f"无 D={D} 的推杆数据")
+                found = False; miss = f"无 D={D} 的推杆数据"
         elif args.kind == "atlas":
             r = env_atlas.atlas_for(a or "化粪池")
             print(f"环保图集 [{a or '化粪池'}]: {r[0]} {r[1]} — {r[2]}")
@@ -780,21 +795,21 @@ def main(argv=None):
                     print(f"02S404 刚性防水套管(A型) DN{dn}: D1={r['D1']} D2={r['D2']} "
                           f"D3={r['D3']} D4={r['D4']} δ={r['delta']} 重{r['weight_kg']}kg")
             else:
-                print(f"无 DN{dn} 的{kind}套管数据")
+                found = False; miss = f"无 DN{dn} 的{kind}套管数据"
         elif args.kind == "mb":
             r = env_equip_data.mbr_plant(a or "II-MBR-12-60A")
             if r:
                 print(f"19S707 一体化MBR设备 {r['model']}: 日处理{r['q_d']}m³/d "
                       f"时处理{r['q_h']}m³/h 装机{r['power_kw']}kW")
             else:
-                print(f"无型号 {a} 的MBR设备数据")
+                found = False; miss = f"无型号 {a} 的MBR设备数据"
         elif args.kind == "septic":
             r = env_equip_data.septic_tank(int(a or 4))
             if r:
                 print(f"03S702 化粪池 {r['no']}号: 有效容积{r['volume_m3']}m³ "
                       f"停留时间{r['hrt_h']}h ({r['note']})")
             else:
-                print(f"无 {a} 号化粪池数据")
+                found = False; miss = f"无 {a} 号化粪池数据"
         elif args.kind == "discharge":
             # 排放限值: kb discharge --arg "GB18918,一级A" 或 "GB18466,排放"
             parts = (a or "GB18918,一级A").split(",")
@@ -804,7 +819,24 @@ def main(argv=None):
                 print(f"{std} {grade or ''} 排放限值: " +
                       ", ".join(f"{k}={v}" for k, v in r.items()))
             else:
-                print(f"无 {std}/{grade} 限值数据")
+                found = False; miss = f"无 {std}/{grade} 限值数据"
+
+        # 本地未命中 → 联网回退（公开权威搜索，不依赖 MCP）
+        if not found:
+            print(miss if 'miss' in dir() else "本地未命中")
+            if args.web:
+                from .engine.web_search import web_search_cli
+                # 构造自然语言查询词，避免把原始逗号参数直接丢给搜索引擎
+                q_map = {
+                    "sleeve": "02S404 防水套管 " + (a.split(",")[0] if a else ""),
+                    "mb": "19S707 一体化MBR设备 " + (a or ""),
+                    "septic": "03S702 化粪池 " + (a or ""),
+                    "discharge": (a or "排放限值") + " 标准",
+                    "ejector-pin": "GB/T 4678.11 压铸模推杆 " + (a or ""),
+                }
+                q = q_map.get(args.kind, a or args.kind)
+                print(f"\n🔎 本地未命中，自动联网检索权威标准/图集：{q}")
+                web_search_cli(q, save=False)
         return 0
 
     else:
