@@ -641,6 +641,13 @@ def main(argv=None):
     web_p.add_argument("--detail", action="store_true", help="抓取前3条正文摘要")
     web_p.add_argument("--max", type=int, default=8, help="最大结果数")
 
+    # 图块/构件联网检索（与 kb --web 同策略：本地无则搜权威标准/图集）
+    block_p = sub.add_parser("block",
+                             help="联网检索图块/构件/设备的国标画法·尺寸·图集（公开网页）")
+    block_p.add_argument("query", help="图块关键词，如 '柔性防水套管 02S404' 或 '闸阀 图例'")
+    block_p.add_argument("--save", action="store_true", help="保存结果到 knowledge/web_cache/")
+    block_p.add_argument("--max", type=int, default=8, help="最大结果数")
+
     # 脱硫塔输入条件
     equip_p.add_argument("--so2", type=float, default=2000.0, help="[脱硫]入口SO2 mg/m³")
     equip_p.add_argument("--lg", type=float, default=15.0, help="[脱硫]液气比 L/m³")
@@ -749,6 +756,12 @@ def main(argv=None):
     elif args.command == "websearch":
         from .engine.web_search import web_search_cli
         web_search_cli(args.query, save=args.save, detail=args.detail, max_n=args.max)
+        return 0
+
+    elif args.command == "block":
+        from .engine.web_search import web_search_cli
+        # 图块检索：优先图集/标准站（供出图时查缺失图块的标准画法/尺寸）
+        web_search_cli(args.query.strip(), save=args.save, detail=False, max_n=args.max)
         return 0
 
     elif args.command == "kb":

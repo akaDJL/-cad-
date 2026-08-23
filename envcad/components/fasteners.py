@@ -127,7 +127,9 @@ def get_bolt_params(spec: str, length: float = 30.0,
         p.update(custom)
     else:
         if spec not in GB_BOLTS:
-            raise ValueError(f"未知螺栓规格 {spec}，可用: {list(GB_BOLTS.keys())}")
+            raise ValueError(
+                f"未知螺栓规格 {spec}，可用: {list(GB_BOLTS.keys())}"
+                f"｜如需联网查权威尺寸请输入: envcad block \"GB/T 5782 {spec}\"")
         d, P, s, k, e = GB_BOLTS[spec]
         p = {"d": d, "P": P, "s": s, "k": k, "e": e}
     p["L"] = length
@@ -148,7 +150,9 @@ def get_nut_params(spec: str, custom: Optional[Dict] = None) -> Dict:
         p.update(custom)
     else:
         if spec not in GB_NUTS:
-            raise ValueError(f"未知螺母规格 {spec}，可用: {list(GB_NUTS.keys())}")
+            raise ValueError(
+                f"未知螺母规格 {spec}，可用: {list(GB_NUTS.keys())}"
+                f"｜如需联网查权威尺寸请输入: envcad block \"GB/T 6170 {spec}\"")
         d, P, s, m, e = GB_NUTS[spec]
         p = {"d": d, "P": P, "s": s, "m": m, "e": e}
     return p
@@ -168,7 +172,9 @@ def get_screw_params(spec: str, screw_type: str = "hex_socket",
         p.update(custom)
     else:
         if spec not in table:
-            raise ValueError(f"未知螺钉规格 {spec}，可用: {list(table.keys())}")
+            raise ValueError(
+                f"未知螺钉规格 {spec}，可用: {list(table.keys())}"
+                f"｜如需联网查权威尺寸请输入: envcad block \"GB/T 70.1 {spec}\"")
         row = table[spec]
         if screw_type == "hex_socket":
             d, P, dk, k, t = row
@@ -192,7 +198,9 @@ def get_washer_params(spec: str, washer_type: str = "flat",
         p.update(custom)
     else:
         if spec not in table:
-            raise ValueError(f"未知垫圈规格 {spec}，可用: {list(table.keys())}")
+            raise ValueError(
+                f"未知垫圈规格 {spec}，可用: {list(table.keys())}"
+                f"｜如需联网查权威尺寸请输入: envcad block \"GB/T 97.1 {spec}\"")
         d1, d2, h = table[spec]
         p = {"d1": d1, "d2": d2, "h": h}
     p["type"] = washer_type

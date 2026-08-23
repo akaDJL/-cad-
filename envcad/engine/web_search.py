@@ -35,7 +35,7 @@ AUTHORITY_HINTS = [
     "doc88", "docin",        # 文档（次优先）
 ]
 
-# 搜索入口：Bing 网页搜索（无需 API key，GET 即返回结果；DuckDuckGo HTML 版对脚本有 anti-bot）
+# 搜索入口：Bing 网页搜索（无需 API key，GET 即返回结果；cn.bing.com 在本环境无结果，用 www）
 _SEARCH_URL = "https://www.bing.com/search"
 
 # 正则
@@ -58,10 +58,12 @@ class SearchHit:
     url: str
     snippet: str = ""
     authority: int = 0  # 命中权威域名加分
+    relevance: int = 0  # 命中查询词/标准号加分
 
     def as_dict(self) -> Dict[str, Any]:
         return {"title": self.title, "url": self.url,
-                "snippet": self.snippet, "authority": self.authority}
+                "snippet": self.snippet, "authority": self.authority,
+                "relevance": self.relevance}
 
 
 def _score_authority(url: str) -> int:
@@ -72,41 +74,88 @@ def _score_authority(url: str) -> int:
     return s
 
 
+def _score_relevance(query: str, title: str, snippet: str) -> int:
+    """query 核心词在标题/摘要中的命中数（含标准号/图集号优先）。"""
+    text = (title + " " + snippet).lower()
+    # 抽取查询中的标准/图集号（4位以上字母数字混合或含 GB/CJJ/JGJ）
+    import re as _re
+    codes = _re.findall(r"[A-Za-z]{1,3}\d{2,5}|GB|CGC|02S404|19S707|03S702", query)
+    score = 0
+    for c in codes:
+        if c.lower() in text:
+            score += 5
+    # 中文/英文关键词命中
+    for kw in [w for w in re.split(r"[\s,，、/]+", query) if len(w) >= 2]:
+        if kw.lower() in text:
+            score += 1
+    return score
+
+
+_UAS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/125.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 "
+    "(KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+]
+
+
 def _fetch_html(url: str, timeout: int = 12) -> Optional[str]:
-    try:
-        req = urllib.request.Request(
-            url,
-            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                                    "AppleWebKit/537.36 (KHTML, like Gecko) "
-                                    "Chrome/124.0 Safari/537.36",
-                     "Accept-Language": "zh-CN,zh;q=0.9"},
-        )
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            raw = resp.read(1_000_000)
-        enc = resp.headers.get_content_charset() or "utf-8"
-        return raw.decode(enc, errors="ignore")
-    except Exception:
-        return None
+    for ua in _UAS:
+        try:
+            req = urllib.request.Request(
+                url,
+                headers={"User-Agent": ua, "Accept-Language": "zh-CN,zh;q=0.9"},
+            )
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                raw = resp.read(1_000_000)
+            enc = resp.headers.get_content_charset() or "utf-8"
+            return raw.decode(enc, errors="ignore")
+        except Exception:
+            continue
+    return None
 
 
 def search(query: str, max_results: int = 8, fetch_detail: bool = False) -> List[SearchHit]:
-    """联网搜索。返回按权威度排序的结果列表。"""
-    params = urllib.parse.urlencode({"q": query, "setlang": "zh-CN", "cc": "CN"})
-    url = _SEARCH_URL + "?" + params
-    html = _fetch_html(url)
-    if not html:
+    """联网搜索。返回按权威度+相关度排序的结果列表。
+
+    稳健策略：
+    1. 先按原 query 搜；若全部不相关，则用 query 中的图集号/标准号 + "图集" 再搜一次。
+    2. UA 轮换重试。
+    """
+    def _one(q: str) -> List[SearchHit]:
+        params = urllib.parse.urlencode({"q": q, "setlang": "zh-CN", "cc": "CN"})
+        url = _SEARCH_URL + "?" + params
+        for _ in range(2):
+            html = _fetch_html(url)
+            if not html:
+                continue
+            hits = _parse_bing(html, q)
+            related = [h for h in hits if (h.authority + h.relevance) > 0]
+            cand = related if related else hits
+            if cand:
+                return cand
         return []
-    hits = _parse_bing(html)
-    hits.sort(key=lambda h: h.authority, reverse=True)
+
+    best = _one(query)
+    if not best:
+        # 抽取图集号/标准号，用 "图集号 图集" 兜底（Bing 对纯图集号查询更稳定）
+        codes = re.findall(r"\d{2}[A-Z]\d{3,4}|GB/T?\d{3,5}|CJJ\d+|JGJ\d+", query)
+        if codes:
+            best = _one(codes[0] + " 图集")
+    if not best:
+        return []
+    best.sort(key=lambda h: (h.authority + h.relevance * 2), reverse=True)
     if fetch_detail:
-        for h in hits[:3]:
+        for h in best[:3]:
             detail = _fetch_html(h.url)
             if detail:
                 h.snippet = _clean_text(detail)[:400]
-    return hits[:max_results]
+    return best[:max_results]
 
 
-def _parse_bing(html: str) -> List[SearchHit]:
+def _parse_bing(html: str, query: str = "") -> List[SearchHit]:
     """解析 Bing 搜索结果：以 b_algo 为锚点切分，再抓主链接与摘要。
 
     Bing 结果块结构不稳定（class 常带后缀），这里用宽松策略：
@@ -136,7 +185,8 @@ def _parse_bing(html: str) -> List[SearchHit]:
             snip_m = re.search(r'class="[^"]*b_lineclamp[^"]*"[^>]*>(.*?)</', seg, re.S)
         snippet = _strip_tags(snip_m.group(1)) if snip_m else ""
         hit = SearchHit(title=title, url=href, snippet=snippet,
-                        authority=_score_authority(href))
+                        authority=_score_authority(href),
+                        relevance=_score_relevance(query, title, snippet))
         hits.append(hit)
     return hits
 
