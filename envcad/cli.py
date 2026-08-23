@@ -795,7 +795,8 @@ def main(argv=None):
                 pr = subprocess.run(
                     ["git", "-C", repo, "-c", "http.proxy=http://127.0.0.1:65532",
                      "-c", "https.proxy=http://127.0.0.1:65532",
-                     "push", "origin", "master"],
+                     "-c", "http.sslBackend=openssl",
+                     "push", "origin", "main"],
                     capture_output=True, text=True)
                 if pr.returncode == 0:
                     print("✓ 已 commit 并走代理推送 GitHub（云端同步完成）。")
@@ -803,7 +804,9 @@ def main(argv=None):
                     # 代理失败则尝试直连绕过
                     pr2 = subprocess.run(
                         ["git", "-C", repo, "-c", "http.proxy=",
-                         "-c", "https.proxy=", "push", "origin", "master"],
+                         "-c", "https.proxy=",
+                         "-c", "http.sslBackend=openssl",
+                         "push", "origin", "main"],
                         capture_output=True, text=True)
                     if pr2.returncode == 0:
                         print("✓ 已 commit 并直连推送 GitHub（云端同步完成）。")
