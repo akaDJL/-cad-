@@ -626,7 +626,8 @@ def main(argv=None):
     # ima 知识库查询（出图时查国标/图集号）
     kb_p = sub.add_parser("kb", help="查询 ima 订阅知识库沉淀的国标/图集/设备数据")
     kb_p.add_argument("kind", choices=["countersink", "stamp-angle", "ejector-pin",
-                                        "atlas", "pipe-atlas", "hvac-sample", "hvac-note"],
+                                        "atlas", "pipe-atlas", "hvac-sample", "hvac-note",
+                                        "sleeve", "mb", "septic", "discharge"],
                       help="查询类型")
     kb_p.add_argument("--arg", default=None, help="查询参数(如规格/M4/化粪池/水泵)")
 
@@ -736,7 +737,7 @@ def main(argv=None):
         return 0
 
     elif args.command == "kb":
-        from .knowledge import mech_gb, env_atlas, hvac_extra
+        from .knowledge import mech_gb, env_atlas, hvac_extra, env_equip_data
         a = args.arg
         if args.kind == "countersink":
             r = mech_gb.countersink(a or "4")
@@ -764,6 +765,46 @@ def main(argv=None):
             print(f"暖通样本 [{a or '水泵'}]: {r[0]} — {r[1]}")
         elif args.kind == "hvac-note":
             print(f"暖通出图提示 [{a or '冷却塔'}]: {hvac_extra.drawing_note(a or '冷却塔')}")
+        elif args.kind == "sleeve":
+            # 防水套管: kb sleeve --arg "200,flexible,I" 或 "200,rigid"
+            parts = (a or "200,flexible,I").split(",")
+            dn = int(parts[0]); kind = parts[1] if len(parts) > 1 else "flexible"
+            seal = parts[2] if len(parts) > 2 else "I"
+            r = env_equip_data.waterproof_sleeve(dn, kind, seal)
+            if r:
+                if kind == "flexible":
+                    print(f"02S404 柔性防水套管 DN{dn} {seal}型: D1={r['D1']} D2={r['D2']} "
+                          f"D3={r['D3']} D4={r['D4']} D5={r['D5']} l={r['l']} 螺栓{r['bolts']} "
+                          f"重{r['weight_kg']}kg")
+                else:
+                    print(f"02S404 刚性防水套管(A型) DN{dn}: D1={r['D1']} D2={r['D2']} "
+                          f"D3={r['D3']} D4={r['D4']} δ={r['delta']} 重{r['weight_kg']}kg")
+            else:
+                print(f"无 DN{dn} 的{kind}套管数据")
+        elif args.kind == "mb":
+            r = env_equip_data.mbr_plant(a or "II-MBR-12-60A")
+            if r:
+                print(f"19S707 一体化MBR设备 {r['model']}: 日处理{r['q_d']}m³/d "
+                      f"时处理{r['q_h']}m³/h 装机{r['power_kw']}kW")
+            else:
+                print(f"无型号 {a} 的MBR设备数据")
+        elif args.kind == "septic":
+            r = env_equip_data.septic_tank(int(a or 4))
+            if r:
+                print(f"03S702 化粪池 {r['no']}号: 有效容积{r['volume_m3']}m³ "
+                      f"停留时间{r['hrt_h']}h ({r['note']})")
+            else:
+                print(f"无 {a} 号化粪池数据")
+        elif args.kind == "discharge":
+            # 排放限值: kb discharge --arg "GB18918,一级A" 或 "GB18466,排放"
+            parts = (a or "GB18918,一级A").split(",")
+            std = parts[0]; grade = parts[1] if len(parts) > 1 else None
+            r = env_equip_data.discharge_limit(std, grade)
+            if r:
+                print(f"{std} {grade or ''} 排放限值: " +
+                      ", ".join(f"{k}={v}" for k, v in r.items()))
+            else:
+                print(f"无 {std}/{grade} 限值数据")
         return 0
 
     else:
