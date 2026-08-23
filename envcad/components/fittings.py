@@ -836,9 +836,22 @@ VALVE_DRAWERS = {
 }
 
 
-def draw_any_valve(msp, center, valve_type: str, scale: float, **kwargs):
-    """统一阀门绘制入口。valve_type 见 VALVE_DRAWERS。"""
+def draw_any_valve(msp, center, valve_type: str, scale: float,  **kwargs):
+    """统一阀门绘制入口。valve_type 见 VALVE_DRAWERS。
+
+    未收录的阀门类型不报错，改为联网检索权威画法并返回 None（不打断出图流程）。
+    """
     drawer = VALVE_DRAWERS.get(valve_type)
     if drawer is None:
-        raise ValueError(f"未知阀门类型: {valve_type}，可选: {list(VALVE_DRAWERS.keys())}")
+        print(f"⚠ 未知阀门类型: {valve_type}（本地未收录，可选: {list(VALVE_DRAWERS.keys())}）")
+        try:
+            from .engine_web_bridge import search_web
+            hits = search_web(f"{valve_type} 阀门 标准 图集 画法", max_n=3)
+            if hits:
+                print("   联网检索到以下权威参考：")
+                for h in hits:
+                    print(f"   - {h['title']}  {h['url']}")
+        except Exception:
+            pass
+        return None
     return drawer(msp, center, scale, **kwargs)

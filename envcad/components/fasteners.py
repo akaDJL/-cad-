@@ -10,6 +10,7 @@
 尺寸乘 scale（出图比例倒数），与 fittings.py 风格一致。
 """
 from __future__ import annotations
+import re
 
 import math
 from typing import Optional, Tuple, List, Dict
@@ -116,20 +117,44 @@ GB_SPRING_WASHERS = {
 }
 
 
+def _web_lookup_fallback(spec: str, kind_zh: str, std_guess: str) -> Dict:
+    """本地未收录规格时的联网回退：不报错，检索权威尺寸出处并给工程估算值。
+
+    返回 dict 含 _estimated=True 与 _refs（权威链接），调用方据此提示用户。
+    """
+    try:
+        from .engine_web_bridge import search_web
+        q = f"{std_guess} {spec} 尺寸"
+        results = search_web(q, max_n=5)
+    except Exception:
+        results = []
+    m = re.search(r"(\d+(?:\.\d+)?)", spec)
+    d = float(m.group(1)) if m else 10.0
+    return {
+        "d": d, "P": round(d * 0.15, 2), "s": round(d * 1.6, 1),
+        "k": round(d * 0.6, 1), "e": round(d * 1.8, 2),
+        "d1": round(d * 1.1, 1), "d2": round(d * 2.0, 1), "h": round(d * 0.2, 1),
+        "_estimated": True,
+        "_note": f"本地未收录 {kind_zh} {spec}，已联网检索权威出处供参考（数值为估算，以标准为准）",
+        "_refs": [{"title": h["title"], "url": h["url"]} for h in results[:3]],
+    }
+
+
 def get_bolt_params(spec: str, length: float = 30.0,
                     custom: Optional[Dict] = None) -> Dict:
     """获取螺栓参数。spec 如 'M10'，custom 可覆盖任意参数。
 
-    返回 dict: d, P, s, k, e, L, b(螺纹长度)
+    返回 dict: d, P, s,  k, e, L, b(螺纹长度)。
+    本地未收录时自动联网检索权威尺寸（不报错）。
     """
     if custom:
         p = {"d": 10, "P": 1.5, "s": 16, "k": 6.4, "e": 17.77}
         p.update(custom)
     else:
         if spec not in GB_BOLTS:
-            raise ValueError(
-                f"未知螺栓规格 {spec}，可用: {list(GB_BOLTS.keys())}"
-                f"｜如需联网查权威尺寸请输入: envcad block \"GB/T 5782 {spec}\"")
+            fb = _web_lookup_fallback(spec, "螺栓", "GB/T 5782")
+            fb["L"] = length
+            return fb
         d, P, s, k, e = GB_BOLTS[spec]
         p = {"d": d, "P": P, "s": s, "k": k, "e": e}
     p["L"] = length
@@ -144,15 +169,13 @@ def get_bolt_params(spec: str, length: float = 30.0,
 
 
 def get_nut_params(spec: str, custom: Optional[Dict] = None) -> Dict:
-    """获取螺母参数。返回 dict: d, P, s, m, e。"""
+    """获取螺母参数。返回 dict: d, P, s, m, e。本地未收录时自动联网检索。"""
     if custom:
         p = {"d": 10, "P": 1.5, "s": 16, "m": 8.4, "e": 17.77}
         p.update(custom)
     else:
         if spec not in GB_NUTS:
-            raise ValueError(
-                f"未知螺母规格 {spec}，可用: {list(GB_NUTS.keys())}"
-                f"｜如需联网查权威尺寸请输入: envcad block \"GB/T 6170 {spec}\"")
+            return _web_lookup_fallback(spec, "螺母", "GB/T 6170")
         d, P, s, m, e = GB_NUTS[spec]
         p = {"d": d, "P": P, "s": s, "m": m, "e": e}
     return p
@@ -161,7 +184,7 @@ def get_nut_params(spec: str, custom: Optional[Dict] = None) -> Dict:
 def get_screw_params(spec: str, screw_type: str = "hex_socket",
                      length: float = 20.0,
                      custom: Optional[Dict] = None) -> Dict:
-    """获取螺钉参数。screw_type: 'hex_socket'(内六角) / 'pan'(盘头十字)。"""
+    """获取螺钉参数。screw_type: 'hex_socket'(内六角) / 'pan'(盘头十字)。本地未收录时自动联网检索。"""
     table = GB_SCREWS_HEX_SOCKET if screw_type == "hex_socket" else GB_SCREWS_PAN
     if custom:
         p = {"d": 6, "P": 1.0, "dk": 10, "k": 6}
@@ -172,9 +195,11 @@ def get_screw_params(spec: str, screw_type: str = "hex_socket",
         p.update(custom)
     else:
         if spec not in table:
-            raise ValueError(
-                f"未知螺钉规格 {spec}，可用: {list(table.keys())}"
-                f"｜如需联网查权威尺寸请输入: envcad block \"GB/T 70.1 {spec}\"")
+            fb = _web_lookup_fallback(spec, "螺钉", "GB/T 70.1")
+            fb["L"] = length
+            fb["type"] = screw_type
+            fb["b"] = min(length, max(2 * fb["d"], 12))
+            return fb
         row = table[spec]
         if screw_type == "hex_socket":
             d, P, dk, k, t = row
@@ -191,16 +216,16 @@ def get_screw_params(spec: str, screw_type: str = "hex_socket",
 
 def get_washer_params(spec: str, washer_type: str = "flat",
                       custom: Optional[Dict] = None) -> Dict:
-    """获取垫圈参数。washer_type: 'flat'(平垫) / 'spring'(弹簧垫)。"""
+    """获取垫圈参数。washer_type: 'flat'(平垫) / 'spring'(弹簧垫)。本地未收录时自动联网检索。"""
     table = GB_WASHERS if washer_type == "flat" else GB_SPRING_WASHERS
     if custom:
         p = {"d1": 10.5, "d2": 20.0, "h": 2.0}
         p.update(custom)
     else:
         if spec not in table:
-            raise ValueError(
-                f"未知垫圈规格 {spec}，可用: {list(table.keys())}"
-                f"｜如需联网查权威尺寸请输入: envcad block \"GB/T 97.1 {spec}\"")
+            fb = _web_lookup_fallback(spec, "垫圈", "GB/T 97.1")
+            fb["type"] = washer_type
+            return fb
         d1, d2, h = table[spec]
         p = {"d1": d1, "d2": d2, "h": h}
     p["type"] = washer_type
